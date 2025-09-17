@@ -60,13 +60,13 @@ namespace MQGateway
 					await commander.StartAsync(cts.Token);
 				}
 
-				Console.WriteLine("Application started. Press Ctrl+C to stop.");
+				Console.WriteLine("MQGateway started. Press Ctrl+C to stop.");
 				Console.WriteLine("Listening for messages...");
 
 				// Ожидаем сигнал завершения
 				await host.WaitForShutdownAsync(cts.Token);
 
-				Console.WriteLine("Application stopped gracefully.");
+				Console.WriteLine("MQGateway stopped gracefully.");
 			}
 			catch (OperationCanceledException)
 			{

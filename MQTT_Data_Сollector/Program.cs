@@ -49,14 +49,14 @@ namespace MQTT_Data_Сollector
 					var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
 
 					var mqttClient = serviceProvider.GetRequiredService<IMqttClient>();
-					await mqttClient.ConnectAsync();
+					await mqttClient.ConnectAsync(cts.Token);
 
 					var rabbitMQConsumer = serviceProvider.GetRequiredService<IMessageConsumer>();
-					await rabbitMQConsumer.ConnectAsync();
+					await rabbitMQConsumer.ConnectAsync(cts.Token);
 					var rabbitMQProducer = serviceProvider.GetRequiredService<IMessageProducer>();
-					await rabbitMQProducer.ConnectAsync();
+					await rabbitMQProducer.ConnectAsync(cts.Token);
 					var rabbitMQQueueManager = serviceProvider.GetRequiredService<IMessageQueueManager>();
-					await rabbitMQQueueManager.ConnectAsync();
+					await rabbitMQQueueManager.ConnectAsync(cts.Token);
 
 					var rabbitMQService = serviceProvider.GetRequiredService<RabbitMQService>();
 					var mqttSubscriberWorker = serviceProvider.GetRequiredService<IWorker>();
@@ -69,9 +69,9 @@ namespace MQTT_Data_Сollector
 							logger?.LogInformation($"Get data - Topic: [{eMQTT.Topic}] Message: [{eMQTT.Payload}]");
 
 							if (!string.IsNullOrWhiteSpace(eMQTT.Topic) && !string.IsNullOrWhiteSpace(eMQTT.Payload))
-							{
 								await rabbitMQService.PublishDataAsync(eMQTT.Topic, eMQTT.Payload);
-							}
+							else
+								logger?.LogWarning("MQTT message or topic is empty!");
 						}
 						catch (Exception ex)
 						{
@@ -81,6 +81,14 @@ namespace MQTT_Data_Сollector
 
 					await mqttSubscriberWorker.StartAsync();
 				}
+
+				Console.WriteLine("MQTT_Data_Сollector started. Press Ctrl+C to stop.");
+				Console.WriteLine("Listening for messages...");
+
+				// Ожидаем сигнал завершения
+				await host.WaitForShutdownAsync(cts.Token);
+
+				Console.WriteLine("MQTT_Data_Сollector stopped gracefully.");
 			}
 			catch (OperationCanceledException)
 			{
