@@ -60,9 +60,6 @@ namespace MQGateway.DataWork
 			{
 				entity.HasKey(a => a.ID_AreaPoint);
 				entity.Property(a => a.Depression_AreaPoint).IsRequired();
-				entity.Property(a => a.Perimeter_AreaPoint).IsRequired();
-				entity.Property(a => a.Included_AreaPoint).IsRequired();
-				entity.Property(a => a.Islands_AreaPoint).IsRequired();
 				entity.HasOne(a => a.Topic)
 					  .WithMany(t => t.AreaPoints)
 					  .HasForeignKey(a => a.ID_Topic)
