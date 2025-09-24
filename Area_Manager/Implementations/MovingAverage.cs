@@ -1,16 +1,12 @@
-﻿namespace Area_Manager
+﻿using Area_Manager.Core.Interfaces;
+
+namespace Area_Manager.Implementations
 {
-	internal class ExponentialMovingAverage
+	internal class ExponentialMovingAverage : IMovingAverage
 	{
 		private readonly double _alpha;
-		private readonly double _windowSize;
 
-		public ExponentialMovingAverage(double smoothing, double windowSize)
-		{
-			_windowSize = windowSize;
-
-			_alpha = smoothing / (_windowSize + 1);
-		}
+		public ExponentialMovingAverage(double smoothing, double windowSize) => _alpha = smoothing / (windowSize + 1);
 
 		public List<double> Calculate(List<double> values) //возможно возвращать стоит List<double?>
 		{
@@ -20,15 +16,11 @@
 			double lastEMA = values[0];
 
 			return values
-				.Select((value, index) =>
+				.Skip(1)
+				.Select(value =>
 				{
-					if (index == 0)
-						return value;
-					else
-					{
-						lastEMA = CalculateActual(value, lastEMA);
-						return lastEMA;
-					}
+					lastEMA = CalculateActual(value, lastEMA);
+					return lastEMA;
 				})
 				.ToList();
 		}

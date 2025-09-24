@@ -2,96 +2,34 @@
 using MQTT_Data_Сollector.Core.Interfaces;
 using MQTT_Data_Сollector.Core.Models;
 using System.Text;
-using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
 
 namespace MQTT_Data_Сollector.Implementations
 {
-	internal class M2MqttClient : IMqttClient
+	internal class M2MqttClient : M2MqttConnector, IMqttClient
 	{
-		public event EventHandler<MqttMessageReceivedEventArgs>? MessageReceived;
-
-		private string _clientId;
-		private string _username;
-		private string _password;
-
 		private readonly ILogger<M2MqttClient> _logger;
 
-		private MqttClient _mqttClient;
+		public event EventHandler<MqttMessageReceivedEventArgs>? MessageReceived;
 		private readonly HashSet<string> _subscriptions = new();
-		public bool IsConnected => _mqttClient.IsConnected;
 
-		public M2MqttClient(string brokerAddress, int port, string username, string password, ILogger<M2MqttClient> logger)
+		public M2MqttClient(string brokerAddress, int port, string username, string password, ILogger<M2MqttClient> logger) : base(brokerAddress, port, username, password, logger)
 		{
-			_clientId = Guid.NewGuid().ToString();
-			_username = username;
-			_password = password;
-			_logger = logger;
-
-			// Создание клиента MQTT
-			_mqttClient = new MqttClient(brokerAddress, port, false, null, null, MqttSslProtocols.None);
-
 			// Настройка обработчиков событий
 			_mqttClient.MqttMsgPublishReceived += OnMqttMsgPublishReceived;
 			_mqttClient.ConnectionClosed += OnConnectionClosed;
+
+			_logger = logger;
 		}
 
-		private bool disconnectMode = false;
-		public async Task ConnectAsync(CancellationToken cancellationToken = default)
-		{
-			if (!IsConnected && disconnectMode)
-			{
-				try
-				{
-					_logger.LogInformation("Connecting to MQTT broker...");
-					await Task.Delay(2000);
-					_mqttClient.Connect(_clientId, _username, _password);
-					_logger.LogInformation("Connected to MQTT broker.");
-				}
-				catch (Exception ex)
-				{
-					_logger.LogError($"Connection failed: {ex.Message}");
-				}
-				finally
-				{
-					await Task.Delay(5000);
-				}
-			}
-		}
+		bool IMqttClient.IsConnected() => IsConnected;
 
-		public async Task DisconnectAsync(CancellationToken cancellationToken = default)
+		public override async Task DisconnectAsync(CancellationToken cancellationToken = default)
 		{
 			if (IsConnected)
-			{
-				_logger.LogInformation("Disconnecting from MQTT broker...");
-
 				await UnsubscribeAllAsync();
-				disconnectMode = true;
-				_mqttClient.Disconnect();
 
-				_logger.LogInformation("Disconnected from MQTT broker.");
-			}
-		}
-
-		public async Task ReconnectAsync(CancellationToken cancellationToken = default)
-		{
-			while (!IsConnected && !disconnectMode)
-			{
-				try
-				{
-					_logger.LogInformation("Reconnecting to MQTT broker...");
-					_mqttClient.Connect(_clientId);
-					_logger.LogInformation("Reconnected to MQTT broker.");
-				}
-				catch (Exception ex)
-				{
-					_logger.LogError($"Reconnection failed: {ex.Message}");
-				}
-				finally
-				{
-					await Task.Delay(5000);
-				}
-			}
+			await base.DisconnectAsync(cancellationToken);
 		}
 
 		public async Task SubscribeAsync(string topic, CancellationToken cancellationToken = default)
@@ -232,13 +170,6 @@ namespace MQTT_Data_Сollector.Implementations
 			{
 				ReconnectAsync().GetAwaiter();
 			}
-		}
-
-		public void Dispose()
-		{
-			DisconnectAsync().GetAwaiter();
-
-			GC.SuppressFinalize(this);
 		}
 	}
 }

@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RabbitMQManager.Core.Implementations;
-using RabbitMQManager.Core.Interfaces;
 using RabbitMQManager.Core.Interfaces.MQ;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
 
 namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 {
-	public class RabbitMQ_RPC_Commander : IWorker
+	public class RabbitMQ_RPC_Commander : IHostedService
 	{
 		private readonly ILogger<RabbitMQ_RPC_Commander> _logger;
 		private readonly IMessageConsumer _messageConsumer;
@@ -73,8 +73,8 @@ namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 
 		public void Dispose()
 		{
-			_messageConsumer?.Dispose();
-			_messageProducer?.Dispose();
+			//_messageConsumer?.Dispose();
+			//_messageProducer?.Dispose();
 
 			_strategyFactories?.Clear();
 		}

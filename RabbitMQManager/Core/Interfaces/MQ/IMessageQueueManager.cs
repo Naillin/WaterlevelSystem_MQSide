@@ -2,7 +2,7 @@
 
 namespace RabbitMQManager.Core.Interfaces.MQ
 {
-	public interface IMessageQueueManager : IConnector
+	public interface IMessageQueueManager : IConnector, IDisposable
 	{
 		Task<QueueDeclareOk> CreateQueueAsync(string queueName, bool durable = true, bool exclusive = false, bool autoDelete = false, bool noWait = false, CancellationToken cancellationToken = default);
 

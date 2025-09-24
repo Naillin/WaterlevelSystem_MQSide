@@ -24,14 +24,6 @@ namespace MQGateway
 	{
 		static async Task Main(string[] args)
 		{
-			// Конфиг
-			var configurationRoot = new ConfigurationBuilder()
-				.SetBasePath(Directory.GetCurrentDirectory())
-				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-				.AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")}.json", optional: true)
-				.AddEnvironmentVariables()
-				.Build();
-
 			using var cts = new CancellationTokenSource();
 			Console.CancelKeyPress += (s, e) =>
 			{
@@ -42,23 +34,9 @@ namespace MQGateway
 
 			try
 			{
-				var host = CreateHostBuilder(configurationRoot).Build();
-
-				using (var startupScope = host.Services.CreateScope())
-				{
-					var serviceProvider = startupScope.ServiceProvider;
-
-					var messageConsumer = serviceProvider.GetRequiredService<IMessageConsumer>();
-					await messageConsumer.ConnectAsync(cts.Token);
-					var messageProducer = serviceProvider.GetRequiredService<IMessageProducer>();
-					await messageProducer.ConnectAsync(cts.Token);
-
-					var collectorWorker = host.Services.GetRequiredService<CollectorWorker>();
-					await collectorWorker.StartAsync(cts.Token);
-
-					var commander = serviceProvider.GetRequiredService<RabbitMQ_RPC_Commander>();
-					await commander.StartAsync(cts.Token);
-				}
+				// Получаем зависимости через DI
+				var host = CreateHostBuilder(GetConfig()).Build();
+				await host.RunAsync(cts.Token);
 
 				Console.WriteLine("MQGateway started. Press Ctrl+C to stop.");
 				Console.WriteLine("Listening for messages...");
@@ -103,7 +81,9 @@ namespace MQGateway
 				services.AddSingleton<IMessageConsumer, RabbitMQConsumer>(); // общий потребитель
 				services.AddSingleton<IMessageProducer, RabbitMQProducer>(); //общий продюсер exchange не указан
 
-				services.AddSingleton<CollectorWorker>(provider =>
+				services.AddHostedService<ConnectorWorker>();
+
+				services.AddHostedService<CollectorWorker>(provider =>
 				{
 					var config = provider.GetRequiredService<AppConfig>();
 					var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
@@ -115,13 +95,7 @@ namespace MQGateway
 				});
 
 				//RPC Strategy
-				var strategyTypes = typeof(GetTopics)
-					.Assembly
-					.GetTypes()
-					.Where(t => typeof(IMQStrategy).IsAssignableFrom(t) &&
-						!t.IsAbstract &&
-						!t.IsInterface &&
-						t.GetCustomAttribute<CommandAttribute>() != null);
+				var strategyTypes = GetStrategies();
 				foreach (var type in strategyTypes)
 				{
 					services.AddTransient(typeof(IMQStrategy), type);
@@ -130,7 +104,7 @@ namespace MQGateway
 
 				services.AddSingleton<ICommandRegistry, CommandRegistry>();
 				services.AddSingleton<IRPC_Handler, RabbitMQ_RPC_Handler>();
-				services.AddSingleton<RabbitMQ_RPC_Commander>(provider =>
+				services.AddHostedService<RabbitMQ_RPC_Commander>(provider =>
 				{
 					var config = provider.GetRequiredService<AppConfig>();
 					var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
@@ -153,5 +127,22 @@ namespace MQGateway
 			});
 
 		private static MQConnectionContext ConfigMQConnect(RabbitConfig config) => new MQConnectionContext(config.Address, config.Port, config.Login, config.Password, config.VirtualHost);
+
+		private static IEnumerable<Type> GetStrategies() =>
+			typeof(GetTopics)
+			.Assembly
+			.GetTypes()
+			.Where(t => typeof(IMQStrategy).IsAssignableFrom(t) &&
+				!t.IsAbstract &&
+				!t.IsInterface &&
+				t.GetCustomAttribute<CommandAttribute>() != null);
+
+		private static IConfigurationRoot GetConfig() =>
+			new ConfigurationBuilder()
+			.SetBasePath(Directory.GetCurrentDirectory())
+			.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+			.AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")}.json", optional: true)
+			.AddEnvironmentVariables()
+			.Build();
 	}
 }

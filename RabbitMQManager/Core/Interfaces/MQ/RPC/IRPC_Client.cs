@@ -1,6 +1,6 @@
 ﻿namespace RabbitMQManager.Core.Interfaces.MQ.RPC
 {
-	public interface IRPC_Client
+	public interface IRPC_Client : IDisposable
 	{
 		Task<TResponse> SendRequestAsync<TRequest, TResponse>(
 			TRequest request,

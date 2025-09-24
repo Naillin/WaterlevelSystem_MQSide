@@ -1,19 +1,17 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MQTT_Data_Сollector.Core.Interfaces;
 using MQTT_Data_Сollector.Core.Models.GetAllTopics;
-using RabbitMQManager.Core.Interfaces;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
 
 namespace MQTT_Data_Сollector.Workers
 {
-	internal class MqttSubscriberWorker : IWorker
+	internal class MqttSubscriberWorker : BackgroundService // в BackgroundService переделать
 	{
 		private readonly IMqttClient _mqttClient;
 		private readonly IRPC_Client _rpcClient;
 		private readonly ILogger<MqttSubscriberWorker> _logger;
 
-		private CancellationTokenSource? _cts;
-		private Task? _runningTask;
 		private HashSet<string> _currentSubscriptions = new();
 
 		public MqttSubscriberWorker(
@@ -26,37 +24,15 @@ namespace MQTT_Data_Сollector.Workers
 			_logger = logger;
 		}
 
-		public Task StartAsync(CancellationToken cancellationToken = default)
-		{
-			_logger.LogInformation("Starting MQTT subscriber worker");
-			_cts = new CancellationTokenSource();
-			_runningTask = RunAsync(_cts.Token);
-			return _runningTask;
-		}
-
-		public async Task StopAsync(CancellationToken cancellationToken = default)
-		{
-			_logger.LogInformation("Stopping MQTT subscriber worker");
-			_cts?.Cancel();
-
-			if (_runningTask != null)
-			{
-				await _runningTask;
-			}
-
-			await _mqttClient.UnsubscribeAllAsync();
-			_logger.LogInformation("MQTT subscriber worker stopped");
-		}
-
-		private async Task RunAsync(CancellationToken cancellationToken)
+		protected override async Task ExecuteAsync(CancellationToken stoppingToken = default)
 		{
 			try
 			{
-				while (!cancellationToken.IsCancellationRequested)
+				while (!stoppingToken.IsCancellationRequested)
 				{
-					await RefreshSubscriptions(cancellationToken);
+					await RefreshSubscriptions(stoppingToken);
 					//await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-					await Task.Delay(30000, cancellationToken);
+					await Task.Delay(30000, stoppingToken);
 				}
 			}
 			catch (OperationCanceledException)
@@ -66,6 +42,13 @@ namespace MQTT_Data_Сollector.Workers
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "Error in MQTT subscriber worker");
+			}
+			finally
+			{
+				await _mqttClient.UnsubscribeAllAsync();
+				await _mqttClient.DisconnectAsync();
+				_mqttClient.Dispose();
+				_rpcClient.Dispose();
 			}
 		}
 
@@ -127,13 +110,6 @@ namespace MQTT_Data_Сollector.Workers
 
 			_currentSubscriptions = newTopicsSet;
 			_logger.LogInformation($"Total subscriptions: {_currentSubscriptions.Count}");
-		}
-
-		public void Dispose()
-		{
-			StopAsync().GetAwaiter();
-			_cts?.Dispose();
-			_mqttClient.Dispose();
 		}
 	}
 }

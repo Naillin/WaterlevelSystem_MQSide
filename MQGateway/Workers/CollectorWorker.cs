@@ -1,16 +1,16 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MQGateway.Core.Entities;
 using MQGateway.Core.Interfaces;
 using MQGateway.Core.Models;
 using RabbitMQManager.Core.Implementations;
-using RabbitMQManager.Core.Interfaces;
 using RabbitMQManager.Core.Interfaces.MQ;
 using System.Text.Json;
 
 namespace MQGateway.Workers
 {
-	internal class CollectorWorker : IWorker
+	internal class CollectorWorker : IHostedService
 	{
 		private readonly ILogger<CollectorWorker> _logger;
 		private readonly IMessageConsumer _messageConsumer;
@@ -80,12 +80,6 @@ namespace MQGateway.Workers
 			{
 				_logger.LogError(ex, "Error in collector worker");
 			}
-		}
-
-		public void Dispose()
-		{
-			StopAsync().GetAwaiter();
-			_messageConsumer.Dispose();
 		}
 	}
 }

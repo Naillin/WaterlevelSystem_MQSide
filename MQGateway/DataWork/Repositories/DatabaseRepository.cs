@@ -10,85 +10,85 @@ namespace MQGateway.DataWork.Repositories
 
 		public DatabaseRepository(IDbContextFactory<AppDbContext> factory) => _factory = factory;
 
-		public async Task<User?> GetUserAsync(string login)
+		public async Task<User?> GetUserAsync(string login, CancellationToken cancellationToken = default)
 		{
-			await using var db = await _factory.CreateDbContextAsync();
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			return await db.Users
 				.AsNoTracking()
-				.FirstOrDefaultAsync(u => u.Login_User == login);
+				.FirstOrDefaultAsync(u => u.Login_User == login, cancellationToken);
 		}
 
-		public async Task AddTopicAsync(Topic topic)
+		public async Task AddTopicAsync(Topic topic, CancellationToken cancellationToken = default)
 		{
-			await using var db = await _factory.CreateDbContextAsync();
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			await db.Topics.AddAsync(topic);
 			await db.SaveChangesAsync();
 		}
 
-		public async Task<int?> RemoveTopicAsync(int topicId)
+		public async Task<int?> RemoveTopicAsync(int topicId, CancellationToken cancellationToken = default)
 		{
-			await using var db = await _factory.CreateDbContextAsync();
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			return await db.Topics
 				.Where(t => t.ID_Topic == topicId)
-				.ExecuteDeleteAsync();
+				.ExecuteDeleteAsync(cancellationToken);
 		}
 
-		public async Task<List<Topic>> GetTopicsAsync()
+		public async Task<List<Topic>> GetTopicsAsync(CancellationToken cancellationToken = default)
 		{
-			await using var db = await _factory.CreateDbContextAsync();
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			return await db.Topics
 				.AsNoTracking()
-				.ToListAsync();
+				.ToListAsync(cancellationToken);
 		}
 
-		public async Task<Topic?> GetTopicAsync(int topicId)
+		public async Task<Topic?> GetTopicAsync(int topicId, CancellationToken cancellationToken = default)
 		{
-			await using var db = await _factory.CreateDbContextAsync();
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			return await db.Topics
 				.AsNoTracking()
-				.FirstOrDefaultAsync(t => t.ID_Topic == topicId);
+				.FirstOrDefaultAsync(t => t.ID_Topic == topicId, cancellationToken);
 		}
 
-		public async Task<Topic?> GetTopicAsync(string topicPath)
+		public async Task<Topic?> GetTopicAsync(string topicPath, CancellationToken cancellationToken = default)
 		{
-			await using var db = await _factory.CreateDbContextAsync();
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			return await db.Topics
 				.AsNoTracking()
-				.FirstOrDefaultAsync(t => t.Path_Topic == topicPath);
+				.FirstOrDefaultAsync(t => t.Path_Topic == topicPath, cancellationToken);
 		}
 
-		public async Task<List<Data>> GetDataAsync(int topicId)
+		public async Task<List<Data>> GetDataAsync(int topicId, CancellationToken cancellationToken = default)
 		{
-			await using var db = await _factory.CreateDbContextAsync();
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			return await db.Data
 				.Where(d => d.ID_Topic == topicId)
 				.OrderByDescending(d => d.Time_Data)
-				.ToListAsync();
+				.ToListAsync(cancellationToken);
 		}
 
-		public async Task<List<Data>> GetDataAsync(int topicId, int limit)
+		public async Task<List<Data>> GetDataAsync(int topicId, int limit, CancellationToken cancellationToken = default)
 		{
-			await using var db = await _factory.CreateDbContextAsync();
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			return await db.Data
 				.Where(d => d.ID_Topic == topicId)
 				.OrderByDescending(d => d.Time_Data)
 				.Take(limit)
-				.ToListAsync();
+				.ToListAsync(cancellationToken);
 		}
 
-		public async Task<AreaPoint?> GetAreaPointsAsync(int topicId)
+		public async Task<AreaPoint?> GetAreaPointsAsync(int topicId, CancellationToken cancellationToken = default)
 		{
-			await using var db = await _factory.CreateDbContextAsync();
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			return await db.AreaPoints
 				.AsNoTracking()
-				.FirstOrDefaultAsync(d => d.ID_Topic == topicId);
+				.FirstOrDefaultAsync(d => d.ID_Topic == topicId, cancellationToken);
 		}
 
-		public async Task AddDataAsync(Data data)
+		public async Task AddDataAsync(Data data, CancellationToken cancellationToken = default)
 		{
-			await using var db = await _factory.CreateDbContextAsync();
-			await db.Data.AddAsync(data);
-			await db.SaveChangesAsync();
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
+			await db.Data.AddAsync(data, cancellationToken);
+			await db.SaveChangesAsync(cancellationToken);
 		}
 	}
 }

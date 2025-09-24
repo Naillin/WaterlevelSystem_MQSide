@@ -15,8 +15,11 @@ namespace RabbitMQManager.Core.Implementations.RabbitMQ
 		public override async Task ConnectAsync(CancellationToken cancellationToken = default)
 		{
 			await base.ConnectAsync(cancellationToken);
-			_channel = await _connection!.CreateChannelAsync(null, cancellationToken);
-			_consumerLogger.LogInformation($"Channel for RabbitMQ attached.");
+
+			if (_channel == null || _channel.IsClosed)
+				_channel = await _connection!.CreateChannelAsync(null, cancellationToken);
+
+			_consumerLogger.LogInformation($"Channel for RabbitMQ attached. {_channel.ToString()}");
 		}
 
 		public async Task<QueueDeclareOk> CreateQueueAsync(string queueName, bool durable = true, bool exclusive = false, bool autoDelete = false, bool noWait = false, CancellationToken cancellationToken = default)

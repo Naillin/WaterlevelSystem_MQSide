@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="RabbitMQManager.Core.Attributes.CommandAttribute">
+    <Position X="11.75" Y="4.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Core\Attributes\CommandAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RabbitMQManager.Implementations.RabbitMQ.RPC.Strategies.MQStrategy&lt;TRequest, TResponse&gt;" BaseTypeListCollapsed="true">
+    <Position X="11.75" Y="3" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>Implementations\RabbitMQ\RPC\Strategies\MQStrategy.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="RabbitMQManager.Implementations.RabbitMQ.RPC.CommandRegistry" BaseTypeListCollapsed="true">
+    <Position X="11.75" Y="6.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAABAAAAAAA=</HashCode>
+      <FileName>Implementations\RabbitMQ\RPC\CommandRegistry.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="RabbitMQManager.Implementations.RabbitMQ.RPC.RabbitMQ_RPC_Client" BaseTypeListCollapsed="true">
+    <Position X="17.25" Y="3" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACgQACAgAAAAIAAAAAAAIgABAAgEAAgAAAA=</HashCode>
+      <FileName>Implementations\RabbitMQ\RPC\RabbitMQ_RPC_Client.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="RabbitMQManager.Implementations.RabbitMQ.RPC.RabbitMQ_RPC_Commander" BaseTypeListCollapsed="true">
+    <Position X="14.5" Y="3" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAACgAAAAgEAkAAAAAIAAAAgAAAQgAAAAAAAA=</HashCode>
+      <FileName>Implementations\RabbitMQ\RPC\RabbitMQ_RPC_Commander.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="RabbitMQManager.Implementations.RabbitMQ.RPC.RabbitMQ_RPC_Handler" BaseTypeListCollapsed="true">
+    <Position X="14.5" Y="6.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAACAAAgAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>Implementations\RabbitMQ\RPC\RabbitMQ_RPC_Handler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="RabbitMQManager.Core.Implementations.RabbitMQ.MQConnector">
+    <Position X="5.25" Y="4.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AFAEAAAAACBEAIBgAAAAAAAAIAgAAAAAAAAAAAAABAA=</HashCode>
+      <FileName>Implementations\RabbitMQ\MQConnector.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="RabbitMQManager.Core.Implementations.RabbitMQ.RabbitMQConsumer">
+    <Position X="0.5" Y="7" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQAAAAQAAABAAQAAAAAiAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Implementations\RabbitMQ\RabbitMQConsumer.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="RabbitMQManager.Core.Implementations.RabbitMQ.RabbitMQProducer">
+    <Position X="0.5" Y="4.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>BCQAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Implementations\RabbitMQ\RabbitMQProducer.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="RabbitMQManager.Core.Implementations.RabbitMQ.RabbitMQQueueManager">
+    <Position X="2.75" Y="5.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAEQAAABAAgAAEAAgAAAAIAAAACAAAAAA=</HashCode>
+      <FileName>Implementations\RabbitMQ\RabbitMQQueueManager.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="RabbitMQManager.Core.Implementations.MessageContext">
+    <Position X="19.75" Y="3" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAABAAAACAAAAAAAAAAQAAgAAAA=</HashCode>
+      <FileName>Implementations\MessageContext.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RabbitMQManager.Implementations.MQConnectionContext">
+    <Position X="19" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAhAAAAAAAAQAAAAAAAAAAIAAAAAAAA=</HashCode>
+      <FileName>Implementations\MQConnectionContext.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RabbitMQManager.Implementations.MQConnectorWorker" BaseTypeListCollapsed="true">
+    <Position X="16.75" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAAAAAAAAAgAAAQgAAABAAAA=</HashCode>
+      <FileName>Implementations\MQConnectorWorker.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Interface Name="RabbitMQManager.Core.Interfaces.IConnector">
+    <Position X="2.75" Y="3.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAAAAAAAgAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Core\Interfaces\IConnector.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="RabbitMQManager.Core.Interfaces.MQ.IMessageConsumer">
+    <Position X="0.5" Y="0.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Core\Interfaces\MQ\IMessageConsumer.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="RabbitMQManager.Core.Interfaces.MQ.IMessageProducer">
+    <Position X="5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Core\Interfaces\MQ\IMessageProducer.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="RabbitMQManager.Core.Interfaces.MQ.IMessageQueueManager">
+    <Position X="2.5" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAEQAAAAAAgAAEAAAAAAAIAAAACAAAAAA=</HashCode>
+      <FileName>Core\Interfaces\MQ\IMessageQueueManager.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="RabbitMQManager.Core.Interfaces.MQ.RPC.ICommandRegistry">
+    <Position X="11.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAA=</HashCode>
+      <FileName>Core\Interfaces\MQ\RPC\ICommandRegistry.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="RabbitMQManager.Core.Interfaces.MQ.RPC.IMQRequest">
+    <Position X="8.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAAAAAAAAAAAAAAQAAAQAAAAAAAAA=</HashCode>
+      <FileName>Core\Interfaces\MQ\RPC\IMQRequest.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="RabbitMQManager.Core.Interfaces.MQ.RPC.IMQResponse">
+    <Position X="6.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAQAAAAAAAAAAgAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Core\Interfaces\MQ\RPC\IMQResponse.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="RabbitMQManager.Core.Interfaces.MQ.RPC.IMQStrategy">
+    <Position X="9.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Core\Interfaces\MQ\RPC\IMQStrategy.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="RabbitMQManager.Core.Interfaces.MQ.RPC.IRPC_Client">
+    <Position X="6.75" Y="2.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAA=</HashCode>
+      <FileName>Core\Interfaces\MQ\RPC\IRPC_Client.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="RabbitMQManager.Core.Interfaces.MQ.RPC.IRPC_Handler">
+    <Position X="9.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>Core\Interfaces\MQ\RPC\IRPC_Handler.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

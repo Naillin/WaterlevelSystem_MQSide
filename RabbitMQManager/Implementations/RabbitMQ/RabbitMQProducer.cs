@@ -22,8 +22,11 @@ namespace RabbitMQManager.Core.Implementations.RabbitMQ
 		public override async Task ConnectAsync(CancellationToken cancellationToken = default)
 		{
 			await base.ConnectAsync(cancellationToken);
-			_channel = await _connection!.CreateChannelAsync(null, cancellationToken);
-			_producerLogger.LogInformation($"Channel for RabbitMQ attached.");
+			
+			if(_channel == null || _channel.IsClosed)
+				_channel = await _connection!.CreateChannelAsync(null, cancellationToken);
+
+			_producerLogger.LogInformation($"Channel for RabbitMQ attached. {_channel.ToString()}");
 		}
 
 		/// <summary>

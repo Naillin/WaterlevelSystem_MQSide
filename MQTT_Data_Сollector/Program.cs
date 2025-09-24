@@ -9,7 +9,6 @@ using MQTT_Data_Сollector.Implementations;
 using MQTT_Data_Сollector.Services;
 using MQTT_Data_Сollector.Workers;
 using RabbitMQManager.Core.Implementations.RabbitMQ;
-using RabbitMQManager.Core.Interfaces;
 using RabbitMQManager.Core.Interfaces.MQ;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
 using RabbitMQManager.Implementations;
@@ -21,14 +20,6 @@ namespace MQTT_Data_Сollector
 	{
 		static async Task Main(string[] args)
 		{
-			// Конфиг
-			var configurationRoot = new ConfigurationBuilder()
-				.SetBasePath(Directory.GetCurrentDirectory())
-				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-				.AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")}.json", optional: true)
-				.AddEnvironmentVariables()
-				.Build();
-
 			using var cts = new CancellationTokenSource();
 			Console.CancelKeyPress += (s, e) =>
 			{
@@ -40,47 +31,8 @@ namespace MQTT_Data_Сollector
 			try
 			{
 				// Получаем зависимости через DI
-				var host = CreateHostBuilder(configurationRoot).Build();
-
-				using (var startupScope = host.Services.CreateScope())
-				{
-					var serviceProvider = startupScope.ServiceProvider;
-
-					var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
-
-					var mqttClient = serviceProvider.GetRequiredService<IMqttClient>();
-					await mqttClient.ConnectAsync(cts.Token);
-
-					var rabbitMQConsumer = serviceProvider.GetRequiredService<IMessageConsumer>();
-					await rabbitMQConsumer.ConnectAsync(cts.Token);
-					var rabbitMQProducer = serviceProvider.GetRequiredService<IMessageProducer>();
-					await rabbitMQProducer.ConnectAsync(cts.Token);
-					var rabbitMQQueueManager = serviceProvider.GetRequiredService<IMessageQueueManager>();
-					await rabbitMQQueueManager.ConnectAsync(cts.Token);
-
-					var rabbitMQService = serviceProvider.GetRequiredService<RabbitMQService>();
-					var mqttSubscriberWorker = serviceProvider.GetRequiredService<IWorker>();
-
-					// Подписка на события
-					mqttClient.MessageReceived += async (senderMQTT, eMQTT) =>
-					{
-						try
-						{
-							logger?.LogInformation($"Get data - Topic: [{eMQTT.Topic}] Message: [{eMQTT.Payload}]");
-
-							if (!string.IsNullOrWhiteSpace(eMQTT.Topic) && !string.IsNullOrWhiteSpace(eMQTT.Payload))
-								await rabbitMQService.PublishDataAsync(eMQTT.Topic, eMQTT.Payload);
-							else
-								logger?.LogWarning("MQTT message or topic is empty!");
-						}
-						catch (Exception ex)
-						{
-							logger?.LogError(ex, "Error in MQTT message receive!");
-						}
-					};
-
-					await mqttSubscriberWorker.StartAsync();
-				}
+				var host = CreateHostBuilder(GetConfig()).Build();
+				await host.RunAsync(cts.Token);
 
 				Console.WriteLine("MQTT_Data_Сollector started. Press Ctrl+C to stop.");
 				Console.WriteLine("Listening for messages...");
@@ -142,7 +94,9 @@ namespace MQTT_Data_Сollector
 				services.AddSingleton<IMessageConsumer, RabbitMQConsumer>();
 				services.AddSingleton<IMessageQueueManager, RabbitMQQueueManager>();
 
-				services.AddSingleton<RabbitMQService>();
+				services.AddHostedService<ConnectorWorker>();
+
+				services.AddScoped<IMQService, RabbitMQService>(); // првильно ли то что он скоповый?
 				services.AddSingleton<IRPC_Client, RabbitMQ_RPC_Client>(provider =>
 				{
 					var config = provider.GetRequiredService<AppConfig>();
@@ -154,7 +108,9 @@ namespace MQTT_Data_Сollector
 
 					return new RabbitMQ_RPC_Client(logger, queueManager, consumer, producer, config.Rabbit.RPC_Exchange, config.Rabbit.RPC_Routing);
 				});
-				services.AddSingleton<IWorker, MqttSubscriberWorker>();
+
+				services.AddHostedService<MqttClientWorker>();
+				services.AddHostedService<MqttSubscriberWorker>();
 			}).ConfigureLogging((context, logging) =>
 			{
 				logging.ClearProviders();
@@ -166,5 +122,13 @@ namespace MQTT_Data_Сollector
 			});
 
 		private static MQConnectionContext ConfigMQConnect(RabbitConfig config) => new MQConnectionContext(config.Address, config.Port, config.Login, config.Password, config.VirtualHost);
+
+		private static IConfigurationRoot GetConfig() =>
+			new ConfigurationBuilder()
+			.SetBasePath(Directory.GetCurrentDirectory())
+			.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+			.AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")}.json", optional: true)
+			.AddEnvironmentVariables()
+			.Build();
 	}
 }

@@ -3,8 +3,10 @@ using RabbitMQManager.Core.Interfaces;
 
 namespace MQTT_Data_Сollector.Core.Interfaces
 {
-	internal interface IMqttClient : IConnector
+	internal interface IMqttClient : IConnector, IDisposable
 	{
+		bool IsConnected();
+
 		Task SubscribeAsync(string topic, CancellationToken cancellationToken = default);
 
 		Task SubscribeAsync(string[] topics, CancellationToken cancellationToken = default);

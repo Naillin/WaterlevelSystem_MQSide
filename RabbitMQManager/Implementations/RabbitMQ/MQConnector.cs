@@ -119,7 +119,7 @@ namespace RabbitMQManager.Core.Implementations.RabbitMQ
 			GC.SuppressFinalize(this);
 		}
 
-		private async ValueTask DisposeAsync()
+		protected virtual async ValueTask DisposeAsync()
 		{
 			if (_disposed)
 				return;
@@ -145,5 +145,7 @@ namespace RabbitMQManager.Core.Implementations.RabbitMQ
 
 			_disposed = true;
 		}
+
+		~MQConnector() => DisposeAsync().GetAwaiter().GetResult();
 	}
 }

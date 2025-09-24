@@ -1,6 +1,6 @@
 ﻿namespace RabbitMQManager.Core.Interfaces.MQ
 {
-	public interface IMessageProducer : IConnector
+	public interface IMessageProducer : IConnector, IDisposable
 	{
 		Task PublishAsync<T>(T message, string routingKey = "", CancellationToken cancellationToken = default);
 

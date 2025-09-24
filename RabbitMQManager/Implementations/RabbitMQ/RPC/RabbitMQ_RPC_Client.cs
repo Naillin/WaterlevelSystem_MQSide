@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 {
-	public class RabbitMQ_RPC_Client : IRPC_Client, IDisposable
+	public class RabbitMQ_RPC_Client : IRPC_Client
 	{
 		private readonly ILogger<RabbitMQ_RPC_Client> _RPClogger;
 		private readonly Dictionary<string, TaskCompletionSource<string>> _pendingRequests = new();

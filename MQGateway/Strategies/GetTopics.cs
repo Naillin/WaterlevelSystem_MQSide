@@ -21,7 +21,7 @@ namespace MQGateway.Strategies
 			{
 				var dataRepository = scope.ServiceProvider.GetRequiredService<IDataRepository>();
 
-				var topics = await dataRepository.GetTopicsAsync();
+				var topics = await dataRepository.GetTopicsAsync(cancellationToken);
 				List<string> paths = topics
 					.Select(t => t.Path_Topic)
 					.OfType<string>()
