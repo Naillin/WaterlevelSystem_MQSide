@@ -3,7 +3,7 @@ using RabbitMQManager.Core.Interfaces.MQ;
 
 namespace RabbitMQManager.Implementations
 {
-	public abstract class MQConnectorWorker : IHostedService
+	public class MQConnectorWorker : IHostedService
 	{
 		private readonly IMessageConsumer? _messageConsumer;
 		private readonly IMessageProducer? _messageProducer;

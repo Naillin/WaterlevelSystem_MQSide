@@ -81,7 +81,7 @@ namespace MQGateway
 				services.AddSingleton<IMessageConsumer, RabbitMQConsumer>(); // общий потребитель
 				services.AddSingleton<IMessageProducer, RabbitMQProducer>(); //общий продюсер exchange не указан
 
-				services.AddHostedService<ConnectorWorker>();
+				services.AddHostedService<MQConnectorWorker>();
 
 				services.AddHostedService<CollectorWorker>(provider =>
 				{
