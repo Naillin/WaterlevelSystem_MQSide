@@ -27,6 +27,8 @@ namespace Area_Manager.GDALPython
 			_scriptPath = scriptPath;
 
 			_logger = logger;
+
+			StartPythonProcess();
 		}
 
 		public void StartPythonProcess()

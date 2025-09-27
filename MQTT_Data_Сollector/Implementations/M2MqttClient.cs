@@ -143,10 +143,7 @@ namespace MQTT_Data_Сollector.Implementations
 			}
 		}
 
-		public IReadOnlyCollection<string> GetSubscriptions()
-		{
-			return _subscriptions.ToList().AsReadOnly();
-		}
+		public IReadOnlyCollection<string> GetSubscriptions() => _subscriptions.ToList().AsReadOnly();
 
 		// Обработчик события получения сообщения
 		private void OnMqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)

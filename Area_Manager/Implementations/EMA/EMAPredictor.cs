@@ -1,6 +1,6 @@
 ﻿using Area_Manager.Core.Interfaces;
 
-namespace Area_Manager.Implementations
+namespace Area_Manager.Implementations.EMA
 {
 	internal class EMAPredictor : IPredictor
 	{

@@ -38,6 +38,10 @@ namespace MQTT_Data_Сollector.Workers
 					await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
 				}
 			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error in MQTT message listener!");
+			}
 			finally
 			{
 				// ВАЖНО: отписываемся от события при остановке

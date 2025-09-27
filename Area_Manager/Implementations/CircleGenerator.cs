@@ -4,9 +4,6 @@ namespace Area_Manager.Implementations
 {
 	internal class CircleGenerator : PointsGenerator
 	{
-		private readonly Coordinate _center;
-		public CircleGenerator(Coordinate center, double stepDistanceMeters = 30, double radiusMeters = 10000) : base(center, stepDistanceMeters, radiusMeters) => _center = center;
-
 		public override List<Coordinate> Generate()
 		{
 			List<Coordinate> circlePoints = new List<Coordinate>();
@@ -14,11 +11,11 @@ namespace Area_Manager.Implementations
 
 			// Генерация точек круга
 			for (double currentRadiusDegrees = 0;
-				currentRadiusDegrees <= radiusDegreesLat;
-				currentRadiusDegrees += stepDistanceDegreesLat)
+				currentRadiusDegrees <= _radiusDegreesLat;
+				currentRadiusDegrees += _stepDistanceDegreesLat)
 			{
 				// Количество шагов для текущего радиуса
-				int numberOfSteps = (int)(2 * Math.PI * currentRadiusDegrees / stepDistanceDegreesLat);
+				int numberOfSteps = (int)(2 * Math.PI * currentRadiusDegrees / _stepDistanceDegreesLat);
 
 				for (int stepIndex = 0; stepIndex < numberOfSteps; stepIndex++)
 				{
@@ -27,7 +24,7 @@ namespace Area_Manager.Implementations
 
 					// Вычисляем координаты точки
 					double pointLat = _center.Latitude + currentRadiusDegrees * Math.Cos(angle); // Широта точки
-					double pointLon = _center.Longitude + currentRadiusDegrees * Math.Sin(angle) * (stepDistanceDegreesLon / stepDistanceDegreesLat); // Долгота точки
+					double pointLon = _center.Longitude + currentRadiusDegrees * Math.Sin(angle) * (_stepDistanceDegreesLon / _stepDistanceDegreesLat); // Долгота точки
 
 					// Добавляем точку в результат
 					circlePoints.Add(new Coordinate(pointLat, pointLon));

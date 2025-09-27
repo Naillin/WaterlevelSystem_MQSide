@@ -46,7 +46,8 @@ namespace RabbitMQManager.Core.Implementations.RabbitMQ
 						ea.RoutingKey,
 						ea.Exchange,
 						ea.BasicProperties?.Headers ?? new Dictionary<string, object?>(),
-						ea.DeliveryTag);
+						ea.DeliveryTag
+					);
 
 					await messageHandler(ctx, cancellationToken);
 
