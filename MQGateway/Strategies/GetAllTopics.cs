@@ -6,12 +6,12 @@ using RabbitMQManager.Implementations.RabbitMQ.RPC.Strategies;
 
 namespace MQGateway.Strategies
 {
-	[Command("GetAllTopicsRequest")]
-	internal class GetTopics : MQStrategy<GetAllTopicsRequest, GetAllTopicsResponse>
+	[Command("GetAllTopics")]
+	internal class GetAllTopics : MQStrategy<GetAllTopicsRequest, GetAllTopicsResponse>
 	{
 		private readonly IServiceScopeFactory _scopeFactory;
 
-		public GetTopics(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
+		public GetAllTopics(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
 
 		protected override async Task<GetAllTopicsResponse> Handle(GetAllTopicsRequest request, CancellationToken cancellationToken = default)
 		{
@@ -30,7 +30,7 @@ namespace MQGateway.Strategies
 				response = new GetAllTopicsResponse
 				{
 					RequestId = request.RequestId!,
-					Type = "GetAllTopicsRequest",
+					Type = "GetAllTopics",
 					Success = true,
 					ErrorMessage = string.Empty,
 					Topics = paths,

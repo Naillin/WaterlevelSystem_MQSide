@@ -129,7 +129,7 @@ namespace MQGateway
 		private static MQConnectionContext ConfigMQConnect(RabbitConfig config) => new MQConnectionContext(config.Address, config.Port, config.Login, config.Password, config.VirtualHost);
 
 		private static IEnumerable<Type> GetStrategies() =>
-			typeof(GetTopics)
+			typeof(GetAllTopics)
 			.Assembly
 			.GetTypes()
 			.Where(t => typeof(IMQStrategy).IsAssignableFrom(t) &&

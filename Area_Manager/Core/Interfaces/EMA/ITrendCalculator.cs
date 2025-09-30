@@ -1,4 +1,4 @@
-﻿namespace Area_Manager.Core.Interfaces
+﻿namespace Area_Manager.Core.Interfaces.EMA
 {
 	internal interface ITrendCalculator
 	{

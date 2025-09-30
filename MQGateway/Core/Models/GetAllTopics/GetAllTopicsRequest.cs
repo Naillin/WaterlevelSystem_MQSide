@@ -8,6 +8,6 @@ namespace MQGateway.Core.Models.GetAllTopics
 
 		public string? QueueName { get; set; }
 
-		public string? Type { get; set; } = "GetAllTopicsRequest";
+		public string? Type { get; set; } = "GetAllTopics";
 	}
 }

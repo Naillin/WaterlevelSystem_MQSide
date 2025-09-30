@@ -60,7 +60,7 @@ namespace MQTT_Data_Сollector.Workers
 
 				var response = await _rpcClient.SendRequestAsync<GetAllTopicsRequest, GetAllTopicsResponse>(
 					new GetAllTopicsRequest(),
-					"GetAllTopicsRequest",
+					"GetAllTopics",
 					TimeSpan.FromSeconds(30),
 					cancellationToken
 				);

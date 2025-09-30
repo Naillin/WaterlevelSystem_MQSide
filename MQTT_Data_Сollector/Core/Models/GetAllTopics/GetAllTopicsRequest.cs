@@ -8,6 +8,6 @@ namespace MQTT_Data_Сollector.Core.Models.GetAllTopics
 
 		public string? QueueName { get; set; }
 
-		public string? Type { get; set; } = "GetAllTopicsRequest";
+		public string? Type { get; set; } = "GetAllTopics";
 	}
 }

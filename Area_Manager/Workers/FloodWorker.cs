@@ -1,4 +1,5 @@
 ﻿using Area_Manager.Core.Interfaces;
+using Area_Manager.Core.Interfaces.EMA;
 using Area_Manager.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -8,7 +9,7 @@ namespace Area_Manager.Workers
 	internal class FloodWorker : BackgroundService
 	{
 		private readonly ILogger<FloodWorker> _logger;
-		private readonly SensorDataWorker _sensorDataWorker; //писать IHostedService делает не очевидным что класть в конструктор
+		private readonly ISensorDataService _sensorDataService; //писать IHostedService делает не очевидным что класть в конструктор
 		private readonly IPredictor _predictor;
 		private readonly IMetric _metric;
 		private readonly FloodDataService _floodDataService;
@@ -16,9 +17,9 @@ namespace Area_Manager.Workers
 
 		private readonly double _addNumber = 0.5;
 
-		public FloodWorker(SensorDataWorker sensorDataWorker, IPredictor predictor, IMetric metric, ILogger<FloodWorker> logger)
+		public FloodWorker(ISensorDataService sensorDataService, IPredictor predictor, IMetric metric, ILogger<FloodWorker> logger)
 		{
-			_sensorDataWorker = sensorDataWorker;
+			_sensorDataService = sensorDataService;
 			_predictor = predictor;
 			_metric = metric;
 
@@ -33,7 +34,7 @@ namespace Area_Manager.Workers
 			{
 				while (!stoppingToken.IsCancellationRequested)
 				{
-					await Analysis();
+					await Analysis(stoppingToken);
 				}
 
 				await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
@@ -48,17 +49,18 @@ namespace Area_Manager.Workers
 			}
 		}
 
-		private async Task Analysis()
+		private async Task Analysis(CancellationToken cancellationToken = default)
 		{
-			var sensorData = _sensorDataWorker.GetSensorData();
+			var sensorData = _sensorDataService.GetSensorData().Select(s => s.Value).ToList();
 
 			foreach (var sensor in sensorData)
 			{
-				if (sensor.Value.Count() < 10)
+				if (sensor.Data.Count() < 10)
 					continue;
 
-				var data = sensor.Value
-					.Select(s => s.Value)
+				// Берем только данные уровня
+				var data = sensor.Data
+					.Select(s => s.Item1)
 					.ToList();
 
 				var (smoothedValues, predictions) = _predictor.Predict(data, 3);
@@ -68,9 +70,9 @@ namespace Area_Manager.Workers
 				double buffNumber = predictions.First() + _addNumber;
 
 				// F_last > (E_last + buffNumber) & (predict3 + MAE) >= height 
-				if (smoothedValues.Last() >= buffNumber && p3baff >= altitude)
+				if (smoothedValues.Last() >= buffNumber && p3baff >= sensor.Altitude)
 				{
-					var area = _areaCalculator.FindArea(coordinate, predictions.Last());
+					var area = _areaCalculator.FindArea(sensor.Coordinate, predictions.Last());
 				}
 			}
 		}

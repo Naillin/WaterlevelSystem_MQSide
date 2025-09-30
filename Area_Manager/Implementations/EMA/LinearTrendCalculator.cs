@@ -1,4 +1,4 @@
-﻿using Area_Manager.Core.Interfaces;
+﻿using Area_Manager.Core.Interfaces.EMA;
 
 namespace Area_Manager.Implementations.EMA
 {

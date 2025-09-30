@@ -6,7 +6,7 @@ namespace MQTT_Data_Сollector.Core.Models.GetAllTopics
 	{
 		public string? RequestId { get; set; }
 
-		public string? Type { get; set; } = "GetAllTopicsResponse";
+		public string? Type { get; set; } = "GetAllTopics";
 
 		public bool Success { get; set; }
 
