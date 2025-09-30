@@ -1,4 +1,5 @@
-﻿using Area_Manager.Core.Interfaces;
+﻿using Area_Manager.Core;
+using Area_Manager.Core.Interfaces;
 using Area_Manager.Core.Models;
 using Area_Manager.Core.Models.GetTopicInfo;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,23 @@ namespace Area_Manager.Services
 			_rpcClient = rpcClient;
 
 			_logger = logger;
+		}
+
+		public IReadOnlyDictionary<string, SensorDataDto> GetSensorData()
+		{
+			// Возвращаем только завершенные сенсоры
+			var result = new Dictionary<string, SensorDataDto>();
+
+			foreach (var kvp in _sensorDataTasks)
+			{
+				if (kvp.Value.IsValueCreated && kvp.Value.Value.IsCompletedSuccessfully)
+				{
+					result[kvp.Key] = kvp.Value.Value.Result;
+				}
+				// Можно также добавить логику для сенсоров, которые еще в процессе создания
+			}
+
+			return result;
 		}
 
 		public Task AddData(SensorDataReceivedEvent sensorEvent, CancellationToken cancellationToken = default)
@@ -94,24 +112,19 @@ namespace Area_Manager.Services
 					cancellationToken
 				);
 
-				if (!topicInfoResponse.Success || topicInfoResponse.TopicInfo == null)
-				{
-					throw new InvalidOperationException($"Failed to create sensor data for {topicPath}");
-				}
+				if (!topicInfoResponse.Success)
+					throw new InvalidOperationException($"Failed to create sensor data for {topicPath}. Details {topicInfoResponse.ErrorMessage}.");
 
-				var topicInfo = topicInfoResponse.TopicInfo;
 				var sensorData = new SensorDataDto
 				{
-					TopicPath = topicInfo.TopicPath,
-					Coordinate = topicInfo.Coordinate,
-					Altitude = topicInfo.Altitude
+					TopicPath = topicInfoResponse.TopicPath,
+					Coordinate = new Coordinate(topicInfoResponse.Latitude, topicInfoResponse.Longitude),
+					Altitude = topicInfoResponse.Altitude
 				};
 
 				// Переносим накопленные данные из временного хранилища
 				if (_pendingData.TryRemove(topicPath, out var pendingData))
-				{
 					sensorData.Data.AddRange(pendingData);
-				}
 
 				return sensorData;
 			}
@@ -121,27 +134,10 @@ namespace Area_Manager.Services
 				_logger.LogError(ex, $"Failed to create sensor data for {topicPath}");
 
 				// Можно также оставить данные в _pendingData для повторной попытки
-				return new SensorDataDto { TopicPath = topicPath };
+				return new SensorDataDto { TopicPath = "deleted" };
 			}
 		}
 		// Создать стратегию и кинуть запрос к mqgateway. попросить координаты и высоту топика по path_topic
 		// лучше один раз при запуске воркера (в StartAsync) запросить данные как GetTopics и записать их здесь в память!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-		public IReadOnlyDictionary<string, SensorDataDto> GetSensorData()
-		{
-			// Возвращаем только завершенные сенсоры
-			var result = new Dictionary<string, SensorDataDto>();
-
-			foreach (var kvp in _sensorDataTasks)
-			{
-				if (kvp.Value.IsValueCreated && kvp.Value.Value.IsCompletedSuccessfully)
-				{
-					result[kvp.Key] = kvp.Value.Value.Result;
-				}
-				// Можно также добавить логику для сенсоров, которые еще в процессе создания
-			}
-
-			return result;
-		}
 	}
 }

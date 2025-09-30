@@ -6,8 +6,8 @@
 
 		public Coordinate Coordinate { get; set; }
 
-		public double Altitude = 0.0;
+		public double Altitude { get; set; } = 0.0;
 
-		public List<(double, long)> Data = new();
+		public List<(double, long)> Data { get; set; } = new();
 	}
 }

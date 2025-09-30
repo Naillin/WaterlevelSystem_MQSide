@@ -59,6 +59,8 @@ namespace Area_Manager.Workers
 					throw new InvalidOperationException($"Failed to deserialize sensor event.");
 
 				await _sensorDataService.AddData(sensorEvent, cancellationToken);
+
+				_logger.LogInformation($"Added data for topic [{sensorEvent.TopicPath}]. Data: {sensorEvent.Value}; {sensorEvent.Timestamp}.");
 			}
 			catch (Exception ex)
 			{

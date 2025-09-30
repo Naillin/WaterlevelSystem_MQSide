@@ -9,13 +9,11 @@ namespace Area_Manager.Implementations
 		private readonly ILogger<PythonAreaCalculator> _logger;
 		private readonly IPointsGenerator _pointsGenerator;
 
+		//хардкод убрать в всех считалках!!!!
 		private double _distance = 200;
 		private double _radius = 10000;
 		private int _countOfSubs = 100;
 		private double _coefHeight = 2.0;
-
-		private double _stepForHeight;
-		private double _stepForRadius;
 
 		private string _pythonPath = "GDALPython/venv/bin/python3";
 		private string _scriptPath = "GDALPython/main.py";
@@ -35,7 +33,7 @@ namespace Area_Manager.Implementations
 			double stepForHeight = (initialHeight / _coefHeight) / (double)_countOfSubs;
 			double stepForRadius = _radius / (double)_countOfSubs;
 
-			using (var _gDALPython = new GDALPython.GDALPython(_pythonPath, _scriptPath, logger))
+			using (var _gDALPython = new GDALPython.GDALPython(_pythonPath, _scriptPath))
 			{
 				for (double currentRadius = stepForRadius; currentRadius <= 10000; currentRadius = currentRadius + stepForRadius)
 				{

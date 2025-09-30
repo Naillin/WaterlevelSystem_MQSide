@@ -93,7 +93,6 @@ namespace MQTT_Data_Сollector
 				});
 				services.AddSingleton<IMessageConsumer, RabbitMQConsumer>();
 				services.AddSingleton<IMessageQueueManager, RabbitMQQueueManager>();
-
 				services.AddHostedService<ConnectorWorker>();
 
 				services.AddScoped<IMQService, RabbitMQService>(); // првильно ли то что он скоповый?

@@ -64,7 +64,7 @@ namespace MQGateway
 				services.Configure<AppConfig>(configurationRoot);
 				services.AddSingleton<AppConfig>(sp => sp.GetRequiredService<IOptions<AppConfig>>().Value);
 
-				services.AddSingleton(provider =>
+				services.AddSingleton<MQConnectionContext>(provider =>
 				{
 					var config = provider.GetRequiredService<AppConfig>();
 					return ConfigMQConnect(config.Rabbit);
@@ -80,7 +80,6 @@ namespace MQGateway
 
 				services.AddSingleton<IMessageConsumer, RabbitMQConsumer>(); // общий потребитель
 				services.AddSingleton<IMessageProducer, RabbitMQProducer>(); //общий продюсер exchange не указан
-
 				services.AddHostedService<MQConnectorWorker>();
 
 				services.AddHostedService<CollectorWorker>(provider =>
@@ -92,6 +91,17 @@ namespace MQGateway
 					var scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
 
 					return new CollectorWorker(logger, consumer, scopeFactory, config.Rabbit.MQTTQueue);
+				});
+
+				services.AddHostedService<FloodWorker>(provider =>
+				{
+					var config = provider.GetRequiredService<AppConfig>();
+					var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+					var logger = loggerFactory.CreateLogger<FloodWorker>();
+					var consumer = provider.GetRequiredService<IMessageConsumer>();
+					var scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
+
+					return new FloodWorker(logger, consumer, scopeFactory, config.Rabbit.FloodQueue);
 				});
 
 				//RPC Strategy

@@ -2,6 +2,6 @@
 {
 	internal class AppConfig
 	{
-		public RabbitConfig Rabbit { get; set; }
+		public required RabbitConfig Rabbit { get; set; }
 	}
 }

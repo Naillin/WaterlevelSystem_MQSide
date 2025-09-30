@@ -2,8 +2,8 @@
 {
 	internal class AppConfig
 	{
-		public RabbitConfig Rabbit { get; set; }
+		public required RabbitConfig Rabbit { get; set; }
 
-		public MQTTConfig MQTT { get; set; }
+		public required MQTTConfig MQTT { get; set; }
 	}
 }

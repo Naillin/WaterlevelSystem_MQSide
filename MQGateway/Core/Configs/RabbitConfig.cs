@@ -14,6 +14,8 @@
 
 		public required string MQTTQueue { get; set; }
 
+		public required string FloodQueue { get; set; }
+
 		public required string RPC_Queue { get; set; }
 	}
 }

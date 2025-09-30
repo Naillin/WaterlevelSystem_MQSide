@@ -1,6 +1,6 @@
 ﻿using RabbitMQManager.Core.Interfaces.MQ.RPC;
 
-namespace Area_Manager.Core.Models.GetTopicInfo
+namespace MQGateway.Core.Models.GetTopicInfo
 {
 	internal class GetTopicInfoRequest : IMQRequest
 	{

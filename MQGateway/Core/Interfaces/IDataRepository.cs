@@ -23,5 +23,7 @@ namespace MQGateway.Core.Interfaces
 		Task<AreaPoint?> GetAreaPointsAsync(int topicId, CancellationToken cancellationToken = default);
 
 		Task AddDataAsync(Data data, CancellationToken cancellationToken = default);
+
+		Task UpsertAreaPoints(string topicPath, string points, CancellationToken cancellationToken = default);
 	}
 }

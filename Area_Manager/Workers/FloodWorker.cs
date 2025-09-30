@@ -1,27 +1,23 @@
 ﻿using Area_Manager.Core.Interfaces;
-using Area_Manager.Core.Interfaces.EMA;
-using Area_Manager.Services;
+using Area_Manager.Core.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RabbitMQManager.Core.Interfaces.MQ;
 
 namespace Area_Manager.Workers
 {
 	internal class FloodWorker : BackgroundService
 	{
 		private readonly ILogger<FloodWorker> _logger;
-		private readonly ISensorDataService _sensorDataService; //писать IHostedService делает не очевидным что класть в конструктор
-		private readonly IPredictor _predictor;
-		private readonly IMetric _metric;
-		private readonly FloodDataService _floodDataService;
-		private readonly IAreaCalculator _areaCalculator;
+		private readonly ISensorDataService _sensorDataService;
+		private readonly IFloodDataService _floodDataService;
+		private readonly IMessageProducer _messageProducer;
 
-		private readonly double _addNumber = 0.5;
-
-		public FloodWorker(ISensorDataService sensorDataService, IPredictor predictor, IMetric metric, ILogger<FloodWorker> logger)
+		public FloodWorker(ISensorDataService sensorDataService, IFloodDataService floodDataService, IMessageProducer messageProducer, ILogger<FloodWorker> logger)
 		{
 			_sensorDataService = sensorDataService;
-			_predictor = predictor;
-			_metric = metric;
+			_floodDataService = floodDataService;
+			_messageProducer = messageProducer;
 
 			_logger = logger;
 		}
@@ -34,10 +30,10 @@ namespace Area_Manager.Workers
 			{
 				while (!stoppingToken.IsCancellationRequested)
 				{
-					await Analysis(stoppingToken);
-				}
+					await AnalysisAndSend(stoppingToken);
 
-				await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+					await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -49,31 +45,34 @@ namespace Area_Manager.Workers
 			}
 		}
 
-		private async Task Analysis(CancellationToken cancellationToken = default)
+		private async Task AnalysisAndSend(CancellationToken cancellationToken = default)
 		{
-			var sensorData = _sensorDataService.GetSensorData().Select(s => s.Value).ToList();
+			var sensorDatas = _sensorDataService.GetSensorData().Select(s => s.Value).ToList();
 
-			foreach (var sensor in sensorData)
+			foreach (var sensor in sensorDatas)
 			{
+				_logger.LogInformation($"Analysis of topic - [{sensor.TopicPath}].");
+
 				if (sensor.Data.Count() < 10)
 					continue;
 
-				// Берем только данные уровня
-				var data = sensor.Data
-					.Select(s => s.Item1)
-					.ToList();
+				var coords = await _floodDataService.Analysis(sensor, cancellationToken);
 
-				var (smoothedValues, predictions) = _predictor.Predict(data, 3);
+				if (!coords.Any())
+					continue;
 
-				double metric = _metric.Calculate(data, smoothedValues);
-				double p3baff = predictions.Last() + metric;
-				double buffNumber = predictions.First() + _addNumber;
-
-				// F_last > (E_last + buffNumber) & (predict3 + MAE) >= height 
-				if (smoothedValues.Last() >= buffNumber && p3baff >= sensor.Altitude)
+				var coordsList = string.Join(",", coords);
+				var floodAreaCalculatedEvent = new FloodAreaCalculatedEvent
 				{
-					var area = _areaCalculator.FindArea(sensor.Coordinate, predictions.Last());
-				}
+					TopicPath = sensor.TopicPath,
+					Coordinates = coordsList
+				};
+
+				await _messageProducer.PublishAsync<FloodAreaCalculatedEvent>(
+					floodAreaCalculatedEvent,
+					"",
+					cancellationToken
+				);
 			}
 		}
 	}

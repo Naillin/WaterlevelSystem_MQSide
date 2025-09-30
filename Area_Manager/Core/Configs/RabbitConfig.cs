@@ -12,10 +12,12 @@
 
 		public required string VirtualHost { get; set; }
 
-		public required string Data_Queue { get; set; }
+		public required string Analyzer_Queue { get; set; }
 
 		public required string Flood_Exchange { get; set; }
 
-		public required string Flood_Exchange_Routing { get; set; }
+		public required string RPC_Exchange { get; set; }
+
+		public required string RPC_Routing { get; set; }
 	}
 }

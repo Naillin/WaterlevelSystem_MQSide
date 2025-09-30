@@ -90,5 +90,16 @@ namespace MQGateway.DataWork.Repositories
 			await db.Data.AddAsync(data, cancellationToken);
 			await db.SaveChangesAsync(cancellationToken);
 		}
+
+		public async Task UpsertAreaPoints(string topicPath, string points, CancellationToken cancellationToken = default)
+		{
+			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
+			
+			await db.Database.ExecuteSqlRawAsync(
+				"SELECT upsert_areapoints_by_topic_path({0}, {1})",
+				topicPath,
+				points
+			);
+		}
 	}
 }
