@@ -11,6 +11,7 @@ namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 	{
 		private readonly ILogger<RabbitMQ_RPC_Client> _RPClogger;
 		private readonly Dictionary<string, TaskCompletionSource<string>> _pendingRequests = new();
+		private readonly Dictionary<string, string> _tags = new();
 		private readonly object _lock = new();
 
 		private readonly IMessageQueueManager _queueManager;
@@ -76,15 +77,7 @@ namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 				_RPClogger.LogInformation($"Sent request {requestId} to {_requestExchange}");
 
 				// Ждем ответа с таймаутом
-				var responseTask = tcs.Task;
-				var timeoutTask = Task.Delay(timeout, cancellationToken);
-
-				var completedTask = await Task.WhenAny(responseTask, timeoutTask);
-
-				if (completedTask == timeoutTask)
-					throw new TimeoutException($"Request {requestId} timed out after {timeout.TotalSeconds}s");
-
-				var responseJson = await responseTask;
+				var responseJson = await WaitingResponse(tcs.Task, timeout, cancellationToken);
 				var response = JsonSerializer.Deserialize<TResponse>(responseJson);
 
 				if (response == null)
@@ -98,23 +91,32 @@ namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 				{
 					_pendingRequests.Remove(requestId);
 				}
+				await _messageConsumer.StopConsumingAsync(_tags[responseQueue.QueueName]);
 				await _queueManager.DeleteQueue(responseQueue.QueueName);
 			}
+		}
+
+		private async Task<string> WaitingResponse(Task<string> task, TimeSpan timeout, CancellationToken cancellationToken = default)
+		{
+			var timeoutTask = Task.Delay(timeout, cancellationToken);
+			var completedTask = await Task.WhenAny(task, timeoutTask);
+
+			if (completedTask == timeoutTask)
+				throw new TimeoutException($"Request timed out after {timeout.TotalSeconds}s");
+
+			return await task;
 		}
 
 		private async Task<QueueDeclareOk> SetupResponseQueueAsync(CancellationToken cancellationToken = default)
 		{
 			var queue = await _queueManager.AnonymousQueueDeclareAsync(cancellationToken);
 
-			// Подписываемся на ответы один раз при первом запросе
-			if (!_pendingRequests.Any())
-			{
-				await _messageConsumer.StartConsumingAsync(
-					queue.QueueName,
-					HandleResponseMessage,
-					cancellationToken
-				);
-			}
+			string tag = await _messageConsumer.StartConsumingAsync(
+				queue.QueueName,
+				HandleResponseMessage,
+				cancellationToken
+			);
+			_tags[queue.QueueName] = tag;
 
 			return queue;
 		}

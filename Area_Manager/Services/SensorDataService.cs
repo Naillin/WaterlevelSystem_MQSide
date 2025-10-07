@@ -137,7 +137,6 @@ namespace Area_Manager.Services
 				return new SensorDataDto { TopicPath = "deleted" };
 			}
 		}
-		// Создать стратегию и кинуть запрос к mqgateway. попросить координаты и высоту топика по path_topic
 		// лучше один раз при запуске воркера (в StartAsync) запросить данные как GetTopics и записать их здесь в память!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 }
