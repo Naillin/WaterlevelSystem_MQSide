@@ -24,48 +24,45 @@ namespace Area_Manager.Workers
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken = default)
 		{
-			_logger.LogInformation("Starting flood worker");
+			while (!stoppingToken.IsCancellationRequested)
+			{
+				await GetAndAnalysis(stoppingToken);
 
-			try
-			{
-				while (!stoppingToken.IsCancellationRequested)
-				{
-					await AnalysisAndSend(stoppingToken);
-
-					await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
-				}
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Error in flood worker!");
-			}
-			finally
-			{
-				_logger.LogInformation("Flood worker stopped.");
+				await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
 			}
 		}
 
-		private async Task AnalysisAndSend(CancellationToken cancellationToken = default)
+		private async Task GetAndAnalysis(CancellationToken cancellationToken = default)
 		{
 			var sensorDatas = _sensorDataService.GetSensorData().Select(s => s.Value).ToList();
 
-			foreach (var sensor in sensorDatas)
+			// СОЗДАЕМ задачи для всех сенсоров
+			var analysisTasks = sensorDatas
+				.Where(sensor => sensor.Data.Count() >= 10)
+				.Select(sensor => TryAnalysisAndSendAsync(sensor, cancellationToken))
+				.ToList();
+
+			// ЖДЕМ завершения ВСЕХ задач перед выходом из метода
+			await Task.WhenAll(analysisTasks);
+
+			_logger.LogInformation($"Completed analysis of {analysisTasks.Count} sensors");
+		}
+
+		private async Task TryAnalysisAndSendAsync(SensorDataDto sensor, CancellationToken cancellationToken = default)
+		{
+			_logger.LogInformation($"Analysis sensor - [{sensor.TopicPath}]");
+
+			try
 			{
-				_logger.LogInformation($"Analysis of topic - [{sensor.TopicPath}].");
-
-				if (sensor.Data.Count() < 10)
-					continue;
-
 				var coords = await _floodDataService.Analysis(sensor, cancellationToken);
 
 				if (!coords.Any())
-					continue;
+					return;
 
-				var coordsList = string.Join(",", coords);
 				var floodAreaCalculatedEvent = new FloodAreaCalculatedEvent
 				{
 					TopicPath = sensor.TopicPath,
-					Coordinates = coordsList
+					Coordinates = string.Join(',', coords)
 				};
 
 				await _messageProducer.PublishAsync<FloodAreaCalculatedEvent>(
@@ -73,6 +70,10 @@ namespace Area_Manager.Workers
 					"",
 					cancellationToken
 				);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error in FloodWorker!");
 			}
 		}
 	}
