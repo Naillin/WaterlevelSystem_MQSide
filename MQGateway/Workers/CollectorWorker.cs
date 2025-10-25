@@ -68,8 +68,7 @@ namespace MQGateway.Workers
 					{
 						ID_Topic = topic.ID_Topic,
 						Value_Data = dataReceivedEvent.Value.ToString(),
-						Time_Data = dataReceivedEvent.Timestamp,
-						Topic = topic,
+						Time_Data = dataReceivedEvent.Timestamp
 					};
 
 					await dataRepository.AddDataAsync(data);

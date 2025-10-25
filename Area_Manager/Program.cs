@@ -94,7 +94,7 @@ namespace Area_Manager
 				services.AddHostedService<MQConnectorWorker>();
 
 				services.AddSingleton<ITrendCalculator, LinearTrendCalculator>();
-				services.AddSingleton<IMovingAverage, ExponentialMovingAverage>();
+				services.AddSingleton<IMovingAverage>(provider => new ExponentialMovingAverage(2.0, 7.0));
 				services.AddSingleton<IPredictor, EMAPredictor>();
 
 				services.AddSingleton<IPointsGenerator, CircleGenerator>();

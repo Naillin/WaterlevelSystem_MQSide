@@ -26,9 +26,10 @@ namespace Area_Manager.Workers
 		{
 			while (!stoppingToken.IsCancellationRequested)
 			{
+				_logger.LogInformation($"Checking sensors");
 				await GetAndAnalysis(stoppingToken);
 
-				await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+				await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
 			}
 		}
 

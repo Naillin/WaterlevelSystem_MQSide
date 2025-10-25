@@ -41,6 +41,7 @@ namespace MQGateway.Strategies
 						Type = "GetTopicInfo",
 						Success = true,
 						ErrorMessage = string.Empty,
+						TopicPath = topic.Path_Topic ?? string.Empty,
 						Latitude = topic.Latitude_Topic,
 						Longitude = topic.Longitude_Topic,
 						Altitude = topic.Altitude_Topic

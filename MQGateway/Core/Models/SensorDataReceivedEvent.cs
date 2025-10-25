@@ -7,6 +7,6 @@ namespace MQGateway.Core.Models
 
 		public double Value { get; set; }
 
-		public long Timestamp { get; set; }
+		public DateTime Timestamp { get; set; }
 	}
 }

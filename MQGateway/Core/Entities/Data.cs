@@ -20,7 +20,7 @@ namespace MQGateway.Core.Entities
 
 		[Required]
 		[Column("time_data")]
-		public long Time_Data { get; set; }
+		public DateTime Time_Data { get; set; }
 
 		//-------------------------------------------------------------
 

@@ -49,7 +49,6 @@ namespace Area_Manager.Workers
 		{
 			try
 			{
-				//расшифрвка сообщения. должн быть какой то словарь где все топики будут иметь
 				if(context != null && string.IsNullOrWhiteSpace(context.Body))
 					return;
 

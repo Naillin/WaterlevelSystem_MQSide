@@ -19,7 +19,7 @@ namespace MQTT_Data_Сollector.Services
 		public async Task PublishDataAsync(string topic, string value)
 		{
 			_logger.LogInformation($"Publish data in queue.");
-			long time = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+			DateTime time = DateTime.UtcNow;
 
 			var message = new SensorDataReceivedEvent
 			{

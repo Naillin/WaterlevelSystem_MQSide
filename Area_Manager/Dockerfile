@@ -49,8 +49,14 @@ RUN python3 -m venv /app/GDALPython/venv && \
     /app/GDALPython/venv/bin/pip install --upgrade pip && \
     /app/GDALPython/venv/bin/pip install -r /app/GDALPython/requirements.txt
 
-# Устанавливаем права на FIFO директорию
-RUN chmod -R 777 /app/GDALPython/tmp
+# Создаем FIFO файлы
+RUN mkfifo /app/GDALPython/tmp/python_to_csharp && \
+    mkfifo /app/GDALPython/tmp/csharp_to_python
+
+# Устанавливаем права на FIFO директорию и файлы
+RUN chmod -R 777 /app/GDALPython/tmp && \
+    chmod 666 /app/GDALPython/tmp/python_to_csharp && \
+    chmod 666 /app/GDALPython/tmp/csharp_to_python
 
 # Указываем переменные окружения GDAL (на всякий случай)
 ENV GDAL_DATA=/usr/share/gdal

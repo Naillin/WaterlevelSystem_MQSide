@@ -8,7 +8,7 @@ namespace Area_Manager.Implementations.EMA
 
 		public ExponentialMovingAverage(double smoothing, double windowSize) => _alpha = smoothing / (windowSize + 1);
 
-		public List<double> Calculate(List<double> values) //возможно возвращать стоит List<double?>
+		public List<double> Calculate(List<double> values)
 		{
 			if (values == null || !values.Any())
 				return new List<double>();

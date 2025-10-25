@@ -50,11 +50,13 @@ namespace Area_Manager.Services
 			// БЫСТРЫЙ ПУТЬ: сенсор уже полностью создан
 			if (IsSensorFullyCreated(topicPath))
 			{
+				_logger.LogInformation($"Adding data to {topicPath}.");
 				AddDataToExistingSensor(topicPath, sensorEvent.Value, sensorEvent.Timestamp);
 				return Task.CompletedTask;
 			}
 
 			// МЕДЛЕННЫЙ ПУТЬ: сенсор еще не готов
+			_logger.LogInformation($"Unregistered sensor in the system - {topicPath}. Adding data to temporary storage.");
 			_pendingData.AddOrUpdate(topicPath,
 				new List<(double, long)> { (sensorEvent.Value, sensorEvent.Timestamp) },
 				(key, existing) =>
@@ -64,6 +66,7 @@ namespace Area_Manager.Services
 				});
 
 			// Запускаем фоновую инициализацию fire-and-forget
+			_logger.LogInformation($"Attempting to register - {topicPath}.");
 			_ = Task.Run(() => TryEnsureSensorInitializedAsync(topicPath, cancellationToken));
 
 			return Task.CompletedTask;
@@ -96,7 +99,7 @@ namespace Area_Manager.Services
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, $"Background initialization failed for {topicPath}");
+				_logger.LogError(ex, $"Background initialization failed for {topicPath}.");
 			}
 		}
 
@@ -113,7 +116,7 @@ namespace Area_Manager.Services
 				);
 
 				if (!topicInfoResponse.Success)
-					throw new InvalidOperationException($"Failed to create sensor data for {topicPath}. Details {topicInfoResponse.ErrorMessage}.");
+					throw new InvalidOperationException($"Registration error for sensor - {topicPath}. Details {topicInfoResponse.ErrorMessage}.");
 
 				var sensorData = new SensorDataDto
 				{
@@ -131,12 +134,11 @@ namespace Area_Manager.Services
 			catch (Exception ex)
 			{
 				// Логируем ошибку, но не пробрасываем выше, т.к. это фоновая задача
-				_logger.LogError(ex, $"Failed to create sensor data for {topicPath}");
+				_logger.LogError(ex, $"Registration error for sensor - {topicPath}.");
 
 				// Можно также оставить данные в _pendingData для повторной попытки
 				return new SensorDataDto { TopicPath = "deleted" };
 			}
 		}
-		// лучше один раз при запуске воркера (в StartAsync) запросить данные как GetTopics и записать их здесь в память!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 }
