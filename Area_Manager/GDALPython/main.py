@@ -10,11 +10,11 @@ from datetime import datetime
 
 # Функция для записи логов в файл
 def write_log(message):
-    log_file = '/home/Naillin/Progs/MQTT_progs/Area_Manager-sharp/GDALPython/gdal_interface.log'  # Укажите путь к файлу логов
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Формат: Год-Месяц-День Час:Минута:Секунда
-    log_message = f"[{timestamp}] {message}"  # Добавляем время и дату к сообщению
-    with open(log_file, 'a') as f:
-        f.write(log_message + '\n')
+	log_file = 'gdal_interface.log'  # Укажите путь к файлу логов
+	timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Формат: Год-Месяц-День Час:Минута:Секунда
+	log_message = f"[{timestamp}] {message}"  # Добавляем время и дату к сообщению
+	with open(log_file, 'a') as f:
+		f.write(log_message + '\n')
 
 class GDALInterface(object):
 	SEA_LEVEL = 0
@@ -203,8 +203,8 @@ import os
 import sys
 
 # Пути к FIFO-файлам
-fifo_to_python = "/home/Naillin/Progs/MQTT_progs/Area_Manager-sharp/GDALPython/tmp/csharp_to_python"
-fifo_from_python = "/home/Naillin/Progs/MQTT_progs/Area_Manager-sharp/GDALPython/tmp/python_to_csharp"
+fifo_to_python = "/tmp/csharp_to_python"
+fifo_from_python = "/tmp/python_to_csharp"
 
 # Создание FIFO, если они не существуют
 if not os.path.exists(fifo_to_python):
@@ -214,8 +214,8 @@ if not os.path.exists(fifo_from_python):
 
 def main():
 	# Инициализация интерфейса
-	tiles_folder = '/home/Naillin/Progs/MQTT_progs/Area_Manager-sharp/GDALPython/tilesFolder'
-	summary_file = '/home/Naillin/Progs/MQTT_progs/Area_Manager-sharp/GDALPython/tilesFolder/summaryFile.json'
+	tiles_folder = '/data'
+	summary_file = '/data/summaryFile.json'
 	tile_interface = GDALTileInterface(tiles_folder, summary_file)
 
 	if not tile_interface.has_summary_json():

@@ -3,6 +3,7 @@ using RabbitMQ.Client;
 using RabbitMQManager.Core.Implementations;
 using RabbitMQManager.Core.Interfaces.MQ;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
+using System.Text;
 using System.Text.Json;
 
 namespace RabbitMQManager.Implementations.RabbitMQ.RPC
@@ -126,7 +127,8 @@ namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 			try
 			{
 				var requestId = context.Headers.TryGetValue("RequestId", out var headerValue)
-					? headerValue?.ToString()
+					&& headerValue is byte[] byteArray
+					? Encoding.UTF8.GetString(byteArray)
 					: null;
 
 				if (string.IsNullOrEmpty(requestId))
