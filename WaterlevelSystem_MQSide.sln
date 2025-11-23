@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTT_Data_Сollector", "MQT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Area_Manager", "Area_Manager\Area_Manager.csproj", "{0F2ACB85-C31A-4F38-8A04-AB6E013FAD8C}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{81DDED9D-158B-E303-5F62-77A2896D2A5A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DispatcherAreaManager", "DispatcherAreaManager\DispatcherAreaManager.csproj", "{FB17DAA7-B28D-4E73-9A5C-5BEAF786AA83}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +35,10 @@ Global
 		{0F2ACB85-C31A-4F38-8A04-AB6E013FAD8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0F2ACB85-C31A-4F38-8A04-AB6E013FAD8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0F2ACB85-C31A-4F38-8A04-AB6E013FAD8C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB17DAA7-B28D-4E73-9A5C-5BEAF786AA83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB17DAA7-B28D-4E73-9A5C-5BEAF786AA83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB17DAA7-B28D-4E73-9A5C-5BEAF786AA83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB17DAA7-B28D-4E73-9A5C-5BEAF786AA83}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

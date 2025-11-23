@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MQGateway.Core.Entities;
 using MQGateway.Core.Interfaces;
 using MQGateway.Core.Models;
 using RabbitMQManager.Core.Implementations;
@@ -37,7 +36,7 @@ namespace MQGateway.Workers
 
 			_tag = await _messageConsumer.StartConsumingAsync(
 				_queue,
-				RunAsync,
+				MessageHandler,
 				cancellationToken
 			);
 		}
@@ -50,7 +49,7 @@ namespace MQGateway.Workers
 			_tag = string.Empty;
 		}
 
-		private async Task RunAsync(MessageContext context, CancellationToken cancellationToken = default)
+		private async Task MessageHandler(MessageContext context, CancellationToken cancellationToken = default)
 		{
 			try
 			{
