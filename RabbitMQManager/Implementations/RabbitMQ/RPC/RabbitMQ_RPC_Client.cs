@@ -42,7 +42,7 @@ namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 
 		public async Task<TResponse> SendRequestAsync<TRequest, TResponse>(
 			TRequest request,
-			string requestType,
+			string requestType,// сделать string requestType = string.Empty
 			TimeSpan timeout,
 			CancellationToken cancellationToken = default)
 			where TRequest : IMQRequest
@@ -63,11 +63,11 @@ namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 				request.RequestId = requestId;
 				request.QueueName = responseQueue.QueueName;
 
-				await _messageProducer.PublishAsync(
+				await _messageProducer.PublishAsync(// Использовать типизированный метод
 					JsonSerializer.Serialize(request),
 					_requestExchange,
 					_requestRoutingKey,
-					requestType,
+					requestType,// Использовать типизированный метод
 					new Dictionary<string, object> {
 						["RequestId"] = requestId,
 						["RequestType"] = requestType

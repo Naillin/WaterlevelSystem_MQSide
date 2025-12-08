@@ -35,7 +35,9 @@ namespace Area_Manager.Workers
 
 		private async Task GetAndAnalysis(CancellationToken cancellationToken = default)
 		{
-			var sensorDatas = _sensorDataService.GetSensorData().Select(s => s.Value).ToList();
+			var sensorDatas = _sensorDataService.GetSensorData()
+				.Select(s => s.Value)
+				.ToList();
 
 			// СОЗДАЕМ задачи для всех сенсоров
 			var analysisTasks = sensorDatas

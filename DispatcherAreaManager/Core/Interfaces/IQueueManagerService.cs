@@ -1,11 +1,12 @@
 ﻿using DispatcherAreaManager.Core.Models;
+using RabbitMQ.Client;
 
 namespace DispatcherAreaManager.Core.Interfaces
 {
 	internal interface IQueueManagerService
 	{
-		public void AddData(SensorDataReceivedEvent sensorEvent);
+		public Task AddData(SensorDataReceivedEvent? sensorData, CancellationToken cancellationToken = default);
 
-		public IReadOnlyDictionary<string, Queue<SensorDataReceivedEvent>> GetSensors();
+		public IReadOnlyDictionary<string, QueueDeclareOk> GetSensors();
 	}
 }

@@ -57,7 +57,7 @@ namespace Area_Manager.GDALPython
 			Console.WriteLine("Python started.");
 		}
 
-		public double GetElevation(Coordinate coordinate)
+		public async Task<double> GetElevation(Coordinate coordinate, CancellationToken cancellationToken = default)
 		{
 			double result = -32768;
 
@@ -67,10 +67,10 @@ namespace Area_Manager.GDALPython
 			{
 				// Отправка координат в Python через FIFO
 				string coordinates = $"{coordinate.Latitude.ToString(CultureInfo.InvariantCulture)},{coordinate.Longitude.ToString(CultureInfo.InvariantCulture)}";
-				_writer!.WriteLine(coordinates);
+				await _writer!.WriteLineAsync(coordinates.AsMemory(), cancellationToken); // проверить передачу
 
 				// Чтение результата из FIFO
-				string? resultStr = _reader!.ReadLine();
+				string? resultStr = await _reader!.ReadLineAsync(cancellationToken);
 				if (resultStr == null || resultStr == "NULL")
 				{
 					result = -32768;

@@ -23,25 +23,39 @@ namespace Area_Manager.Services
 
 			_logger = logger;
 		}
-
+		
 		public async Task<List<Coordinate>> Analysis(SensorDataDto sensorData, CancellationToken cancellationToken = default)
 		{
-			// Берем только данные уровня
-			var data = sensorData.Data
-				.Select(s => s.Item1)
-				.ToList();
+			using var timeoutCts = GetCombineCancellationToken(cancellationToken);
+			try
+			{
+				// Берем только данные уровня
+				var data = sensorData.Data
+					.Select(s => s.Item1)
+					.ToList();
 
-			var (smoothedValues, predictions) = _predictor.Predict(data, 3);
+				var (smoothedValues, predictions) = _predictor.Predict(data, 3);
 
-			double metric = _metric.Calculate(data, smoothedValues);
-			double p3baff = predictions.Last() + metric;
-			double buffNumber = predictions.First() + _addNumber;
+				double metric = _metric.Calculate(data, smoothedValues);
+				double p3baff = predictions.Last() + metric;
+				double buffNumber = predictions.First() + _addNumber;
 
-			// F_last > (E_last + buffNumber) & (predict3 + MAE) >= height 
-			if (smoothedValues.Last() >= buffNumber && p3baff >= sensorData.Altitude)
-				return _areaCalculator.FindArea(sensorData.Coordinate, predictions.Last());
-			else
+				// F_last > (E_last + buffNumber) & (predict3 + MAE) >= height 
+				if (smoothedValues.Last() >= buffNumber && p3baff >= sensorData.Altitude)
+					return await _areaCalculator.FindArea(sensorData.Coordinate, predictions.Last(), timeoutCts.Token);
+				else
+					return new List<Coordinate>();
+			}
+			catch (OperationCanceledException)
+			{
 				return new List<Coordinate>();
+			}
 		}
+		
+		private CancellationTokenSource GetCombineCancellationToken(CancellationToken globalToken) =>
+			CancellationTokenSource.CreateLinkedTokenSource(
+				globalToken,
+				new CancellationTokenSource(TimeSpan.FromMinutes(5)).Token // убрать хардкод
+				);
 	}
 }

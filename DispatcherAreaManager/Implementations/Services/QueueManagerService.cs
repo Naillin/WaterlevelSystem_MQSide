@@ -1,6 +1,7 @@
 ﻿using DispatcherAreaManager.Core.Interfaces;
 using DispatcherAreaManager.Core.Models;
 using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
 using RabbitMQManager.Core.Interfaces.MQ;
 
 namespace DispatcherAreaManager.Implementations.Services
@@ -9,31 +10,49 @@ namespace DispatcherAreaManager.Implementations.Services
 	{
 		private readonly ILogger<QueueManagerService> _logger;
 		private readonly IMessageQueueManager _queueManager;
-		private readonly IKubernetesService _kubernetes;
+		private readonly IMessageProducer _messageProducer;
 
-		private readonly Dictionary<string, Queue<SensorDataReceivedEvent>> _sensorData = new();
-		private readonly Dictionary<string, string> _sensorToQueue = new();
+		//private readonly Dictionary<string, Queue<SensorDataReceivedEvent>> _sensorData = new();
+		private readonly Dictionary<string, QueueDeclareOk> _sensorToQueue = new();
 
-		public QueueManagerService(ILogger<QueueManagerService> logger, IMessageQueueManager queueManager, IKubernetesService kubernetes)
+		public QueueManagerService(ILogger<QueueManagerService> logger, IMessageQueueManager queueManager, IMessageProducer messageProducer)
 		{
 			_queueManager = queueManager;
-			_kubernetes = kubernetes;
+			_messageProducer = messageProducer;
 
 			_logger = logger;
 		}
 
-		//переделать метод!!!!!!!!!!!!!!!!!!!!!!!!
-		//если нет такого топика в списке, то должна появиться очередь и новый pod для этого дачтика
-		//очередь - исчезает если слушатели остуствуют
+		//Возможно дополнить метод нужно
 		//поду через env передается имя очереди
-		public void AddData(SensorDataReceivedEvent sensorData)
+		public async Task AddData(SensorDataReceivedEvent? sensorData, CancellationToken cancellationToken = default)
 		{
-			if (string.IsNullOrWhiteSpace(sensorData.TopicPath))
-				throw new InvalidOperationException("TopicPath is null!");
+			if (sensorData is null)
+				throw new NullReferenceException("SensorData is null!");
+			
+			string? topicPath = sensorData.TopicPath;
+			if (string.IsNullOrWhiteSpace(topicPath))
+				throw new NullReferenceException("TopicPath is null!");
 
-			_sensorData[sensorData.TopicPath].Append(sensorData);
+			if (_sensorToQueue.TryGetValue(topicPath, out var queue))
+			{
+				try
+				{
+					await _messageProducer.PublishAsync<SensorDataReceivedEvent>(sensorData,
+						"",
+						queue.QueueName,
+						cancellationToken
+					);
+				}
+				catch (RabbitMQ.Client.Exceptions.OperationInterruptedException ex) // очереди больше нет, удаляем такую запись о топике
+				{
+					_sensorToQueue.Remove(topicPath);
+				}
+			}
+			else
+				_sensorToQueue.Add(topicPath, await _queueManager.AnonymousQueueDeclareAsync(cancellationToken));
 		}
 
-		public IReadOnlyDictionary<string, Queue<SensorDataReceivedEvent>> GetSensors() => _sensorData.AsReadOnly();
+		public IReadOnlyDictionary<string, QueueDeclareOk> GetSensors() => _sensorToQueue.AsReadOnly();
 	}
 }

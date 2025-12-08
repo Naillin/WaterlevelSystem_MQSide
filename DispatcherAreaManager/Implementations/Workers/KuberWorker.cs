@@ -1,17 +1,18 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using DispatcherAreaManager.Core.Interfaces;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RabbitMQManager.Core.Interfaces.MQ;
 
 namespace DispatcherAreaManager.Implementations.Workers
 {
 	internal class KuberWorker : BackgroundService
 	{
 		private readonly ILogger<KuberWorker> _logger;
-		private readonly IMessageProducer _messageProducer;
+		private IQueueManagerService _queueManagerService;
 
-		public KuberWorker(ILogger<KuberWorker> logger, IMessageProducer messageProducer)
+		public KuberWorker(ILogger<KuberWorker> logger, IQueueManagerService queueManagerService)
 		{
-			_messageProducer = messageProducer;
+			_queueManagerService = queueManagerService;
+			
 			_logger = logger;
 		}
 

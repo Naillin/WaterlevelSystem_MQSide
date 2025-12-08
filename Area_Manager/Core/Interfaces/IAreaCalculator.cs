@@ -2,6 +2,7 @@
 {
 	internal interface IAreaCalculator
 	{
-		List<Coordinate> FindArea(Coordinate coordinate, double initialHeight = 100);
+		Task<List<Coordinate>> FindArea(Coordinate coordinate, double initialHeight = 100,
+			CancellationToken cancellationToken = default);
 	}
 }
