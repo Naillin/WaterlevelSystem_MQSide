@@ -9,17 +9,13 @@ namespace MQGateway.DataWork
 		public DbSet<Topic> Topics { get; set; }
 		public DbSet<Data> Data { get; set; }
 		public DbSet<AreaPoint> AreaPoints { get; set; }
-
-		//private readonly string _connectionString;
-
+		
 		public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-		//public AppDbContext(string connectionString) => _connectionString = connectionString;
-
-		//protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-		//{
-		//	optionsBuilder.UseNpgsql(_connectionString);
-		//}
+		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+		{
+			optionsBuilder.UseNpgsql();
+		}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
