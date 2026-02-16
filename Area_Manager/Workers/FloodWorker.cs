@@ -12,6 +12,7 @@ namespace Area_Manager.Workers
 		private readonly ISensorDataService _sensorDataService;
 		private readonly IFloodDataService _floodDataService;
 		private readonly IMessageProducer _messageProducer;
+		private readonly Dictionary<string, SensorDataDto> _sensorData = new();
 
 		public FloodWorker(ISensorDataService sensorDataService, IFloodDataService floodDataService, IMessageProducer messageProducer, ILogger<FloodWorker> logger)
 		{
@@ -22,14 +23,14 @@ namespace Area_Manager.Workers
 			_logger = logger;
 		}
 
-		protected override async Task ExecuteAsync(CancellationToken stoppingToken = default)
+		protected override async Task ExecuteAsync(CancellationToken cancellationToken = default)
 		{
-			while (!stoppingToken.IsCancellationRequested)
+			while (!cancellationToken.IsCancellationRequested)
 			{
 				_logger.LogInformation($"Checking sensors");
-				await GetAndAnalysis(stoppingToken);
+				await GetAndAnalysis(cancellationToken);
 
-				await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+				await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
 			}
 		}
 
@@ -55,6 +56,10 @@ namespace Area_Manager.Workers
 		{
 			_logger.LogInformation($"Analysis sensor - [{sensor.TopicPath}]");
 
+			if (_sensorData.TryGetValue(sensor.TopicPath, out var sensorData) 
+			    && sensorData.Data.SequenceEqual(sensor.Data))
+				return;
+			
 			try
 			{
 				var coords = await _floodDataService.Analysis(sensor, cancellationToken);
@@ -62,6 +67,13 @@ namespace Area_Manager.Workers
 				if (!coords.Any())
 					return;
 
+				_sensorData[sensor.TopicPath] = new SensorDataDto 
+				{
+					TopicPath = sensor.TopicPath,
+					Data = sensor.Data.ToList()
+				};
+				//_sensorData[sensor.TopicPath] = sensor with { Data = sensor.Data.ToList() };
+				
 				var floodAreaCalculatedEvent = new FloodAreaCalculatedEvent
 				{
 					TopicPath = sensor.TopicPath,

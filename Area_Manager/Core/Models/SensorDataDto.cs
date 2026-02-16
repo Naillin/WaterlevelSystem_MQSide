@@ -1,6 +1,6 @@
 ﻿namespace Area_Manager.Core.Models
 {
-	internal class SensorDataDto
+	internal class SensorDataDto //переехать на структуру(?)
 	{
 		public string TopicPath { get; set; } = string.Empty;
 

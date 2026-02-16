@@ -35,7 +35,7 @@ RUN apt-get update && \
         python3-pip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Создаем директорию для данных и временных файлов Python
+# Создаем директорию для данных и временных файлов Python (docker run -d -v /путь/на/компьютере:/data area_manager_image)
 RUN mkdir -p /data && mkdir -p /app/GDALPython/tmp
 
 # Копируем опубликованное .NET приложение
