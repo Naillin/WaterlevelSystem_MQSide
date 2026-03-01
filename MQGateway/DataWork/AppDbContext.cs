@@ -12,11 +12,6 @@ namespace MQGateway.DataWork
 		
 		public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-		{
-			optionsBuilder.UseNpgsql();
-		}
-
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			// Настройка User
