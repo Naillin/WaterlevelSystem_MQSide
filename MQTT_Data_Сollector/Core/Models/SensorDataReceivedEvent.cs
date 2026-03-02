@@ -6,6 +6,6 @@
 
 		public double Value { get; set; }
 
-		public DateTime Timestamp { get; set; }
+		public long Timestamp { get; set; }
 	}
 }

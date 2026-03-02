@@ -38,16 +38,22 @@ namespace Area_Manager.Services
 
 				double metric = _metric.Calculate(data, smoothedValues);
 				double p3baff = predictions.Last() + metric;
-				double buffNumber = predictions.First() + _addNumber;
-
-				// F_last > (E_last + buffNumber) & (predict3 + MAE) >= height 
-				if (smoothedValues.Last() >= buffNumber && p3baff >= sensorData.Altitude)
+				double buffedNumber = smoothedValues.Last() + _addNumber;
+				_logger.LogInformation($"Metric = {metric}, p3_buffed = {p3baff}, buffNumber = {buffedNumber}");
+				
+				// F_last > (E_last + addNumber) && (predict3 + MAE) >= height
+				if (data.Last() >= buffedNumber && p3baff >= sensorData.Altitude)
+				{
+					_logger.LogInformation($"Conditions met for topic {sensorData.TopicPath}: f1 = {data.Last()} >= buffNumber = {buffedNumber} and p3_buffed = {p3baff} >= altitude = {sensorData.Altitude}.");
 					return await _areaCalculator.FindArea(sensorData.Coordinate, predictions.Last(), timeoutCts.Token);
-				else
-					return new List<Coordinate>();
+				}
+				
+				_logger.LogInformation($"Conditions NOT met for topic {sensorData.TopicPath}: f1 = {data.Last()} >= buffNumber = {buffedNumber} and p3_buffed = {p3baff} >= altitude = {sensorData.Altitude}.");
+				return new List<Coordinate>();
 			}
 			catch (OperationCanceledException)
 			{
+				_logger.LogInformation("Analysis is cancelled.");
 				return new List<Coordinate>();
 			}
 		}
