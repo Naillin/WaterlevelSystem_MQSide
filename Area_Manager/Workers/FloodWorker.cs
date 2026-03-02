@@ -43,7 +43,7 @@ namespace Area_Manager.Workers
 
 			// СОЗДАЕМ задачи для всех сенсоров
 			var analysisTasks = sensorDatas
-				.Where(sensor => sensor.Data.Count() >= 10)
+				.Where(sensor => sensor.Data.Count() >= 10) // только если данных больше 10 единиц
 				.Select(sensor => TryAnalysisAndSendAsync(sensor, cancellationToken))
 				.ToList();
 

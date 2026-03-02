@@ -21,6 +21,8 @@ namespace Area_Manager.Services
 			_rpcClient = rpcClient;
 
 			_logger = logger;
+			
+			// При запуске один раз вытянуть данные по топикам из кеша. Нужен кеш в который это попадет.
 		}
 
 		public IReadOnlyDictionary<string, SensorDataDto> GetSensorData()
