@@ -32,11 +32,18 @@ RUN apt-get update && \
     apt-get install -y \
         dotnet-runtime-8.0 \
         python3-venv \
-        python3-pip && \
+        python3-pip \
+        libspatialindex-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Исправляем конфликт версий PROJ
+ENV PROJ_LIB=/usr/local/share/proj
+
 # Создаем директорию для данных и временных файлов Python (docker run -d -v /путь/на/компьютере:/data area_manager_image)
-RUN mkdir -p /data && mkdir -p /app/GDALPython/tmp
+RUN mkdir -p /data && \
+    mkdir -p /app/GDALPython/tmp && \
+    chmod -R 777 /app/GDALPython/tmp && \
+    chmod -R 777 /app/GDALPython
 
 # Копируем опубликованное .NET приложение
 COPY --from=publish /app/publish .

@@ -6,10 +6,10 @@ namespace Area_Manager.GDALPython
 {
 	internal class GDALPython : IDisposable
 	{
-		private string _pythonPath = "GDALPython/venv/bin/python3";
-		private string _scriptPath = "GDALPython/main.py";
-		private string _fifoToPython = "GDALPython/tmp/csharp_to_python";  // FIFO для отправки данных в Python
-		private string _fifoFromPython = "GDALPython/tmp/python_to_csharp";  // FIFO для получения данных из Python
+		private string _pythonPath = "/app/GDALPython/venv/bin/python3";
+		private string _scriptPath = "/app/GDALPython/main.py";
+		private string _fifoToPython = "/app/GDALPython/tmp/csharp_to_python";  // FIFO для отправки данных в Python
+		private string _fifoFromPython = "/app/GDALPython/tmp/python_to_csharp";  // FIFO для получения данных из Python
 
 		//private readonly ILogger<GDALPython> _logger;
 
@@ -39,16 +39,20 @@ namespace Area_Manager.GDALPython
 				{
 					FileName = _pythonPath,
 					Arguments = _scriptPath,
+					WorkingDirectory = "/app/GDALPython",
 					UseShellExecute = false,
-					RedirectStandardInput = true,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
+					RedirectStandardInput = false,
+					RedirectStandardOutput = false,
+					RedirectStandardError = false,
 					CreateNoWindow = true
 				}
 			};
+			_pythonProcess.StartInfo.EnvironmentVariables["PROJ_LIB"] = "/usr/local/share/proj";
+			_pythonProcess.StartInfo.EnvironmentVariables["PYTHONPATH"] = "/app/GDALPython";
 
 			Console.WriteLine("Start Python.");
 			_pythonProcess.Start();
+			
 			// Открываем FIFO один раз
 			Console.WriteLine("Open writer.");
 			_writer = new StreamWriter(_fifoToPython) { AutoFlush = true };
@@ -57,6 +61,32 @@ namespace Area_Manager.GDALPython
 			Console.WriteLine("Python started.");
 		}
 
+		public bool HealthCheck()
+		{
+			try
+			{
+				Console.WriteLine("Performing HealthCheck...");
+				_writer!.WriteLine("hello_from_csharp");
+        
+				// Ждем ответа (можно добавить Timeout для надежности)
+				string? response = _reader!.ReadLine();
+        
+				if (response == "hello_from_python")
+				{
+					Console.WriteLine("HealthCheck passed!");
+					return true;
+				}
+				
+				Console.WriteLine($"HealthCheck failed. Unexpected response: {response}");
+				return false;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"HealthCheck error: {ex.Message}");
+				return false;
+			}
+		}
+		
 		public async Task<double> GetElevation(Coordinate coordinate, CancellationToken cancellationToken = default)
 		{
 			double result = -32768;

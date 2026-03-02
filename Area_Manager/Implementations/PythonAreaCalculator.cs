@@ -17,14 +17,20 @@ namespace Area_Manager.Implementations
 		private int _countOfSubs = 100;
 		private double _coefHeight = 2.0;
 
-		private string _pythonPath = "GDALPython/venv/bin/python3";
-		private string _scriptPath = "GDALPython/main.py";
+		private string _pythonPath = "/app/GDALPython/venv/bin/python3";
+		private string _scriptPath = "/app/GDALPython/main.py";
 
 		public PythonAreaCalculator(ILogger<PythonAreaCalculator> logger)
 		{
 			_pointsGenerator = new CircleGenerator();
 
 			_logger = logger;
+			
+			using (var _gDALPython = new GDALPython.GDALPython(_pythonPath, _scriptPath))
+			{
+				if (!_gDALPython.HealthCheck())
+					throw new Exception("GDALPython is cannot started!!!");
+			}
 		}
 
 		public async Task<List<Coordinate>> FindArea(Coordinate coordinate, double initialHeight = 100, CancellationToken cancellationToken = default)
