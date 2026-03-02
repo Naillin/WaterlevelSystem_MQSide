@@ -35,6 +35,14 @@ namespace Area_Manager.Workers
 				HandleResponseMessage,
 				cancellationToken
 			);
+			
+			while (!cancellationToken.IsCancellationRequested)
+			{
+				_logger.LogInformation("Checking sensors for expiring");
+				CheckExpiredTopics();
+
+				await Task.Delay(TimeSpan.FromMinutes(15), cancellationToken);
+			}
 		}
 
 		public async Task StopAsync(CancellationToken cancellationToken = default)
@@ -65,6 +73,19 @@ namespace Area_Manager.Workers
 			{
 				_logger.LogError(ex, "Error handling response message in sensor data worker");
 			}
+		}
+
+		private void CheckExpiredTopics()
+		{
+			long currentUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+			long threshold = currentUnixTime - (48 * 60 * 60); // топики не получающие данные уже более 48 часов. УБРАТЬ ХАРДКОД!!!!!!
+
+			var expiredSensors = _sensorDataService.GetSensorData()
+				.Where(kvp => kvp.Value.Data.LastOrDefault().Timestamp < threshold)
+				.Select(kvp => kvp.Key)
+				.ToList();
+			
+			_sensorDataService.DeleteSensorsAsync(expiredSensors);
 		}
 	}
 }

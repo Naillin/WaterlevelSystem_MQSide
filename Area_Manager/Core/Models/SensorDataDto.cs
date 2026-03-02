@@ -8,6 +8,6 @@
 
 		public double Altitude { get; set; } = 0.0;
 
-		public List<(double, long)> Data { get; set; } = new();
+		public List<(double Value, long Timestamp)> Data { get; set; } = new();
 	}
 }

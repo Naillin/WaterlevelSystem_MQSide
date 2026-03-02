@@ -31,7 +31,7 @@ namespace Area_Manager.Services
 			{
 				// Берем только данные уровня
 				var data = sensorData.Data
-					.Select(s => s.Item1)
+					.Select(s => s.Value)
 					.ToList();
 
 				var (smoothedValues, predictions) = _predictor.Predict(data, 3);
@@ -56,6 +56,6 @@ namespace Area_Manager.Services
 			CancellationTokenSource.CreateLinkedTokenSource(
 				globalToken,
 				new CancellationTokenSource(TimeSpan.FromMinutes(5)).Token // убрать хардкод
-				);
+			);
 	}
 }

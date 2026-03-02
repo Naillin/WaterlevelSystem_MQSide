@@ -29,6 +29,7 @@ namespace Area_Manager.Workers
 			{
 				_logger.LogInformation($"Checking sensors");
 				await GetAndAnalysis(cancellationToken);
+				DeleteExpiredTopics();
 
 				await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
 			}
@@ -90,6 +91,20 @@ namespace Area_Manager.Workers
 			{
 				_logger.LogError(ex, "Error in FloodWorker!");
 			}
+		}
+
+		private void DeleteExpiredTopics()
+		{
+			long currentUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+			long threshold = currentUnixTime - (48 * 60 * 60); // топики не получающие данные уже более 48 часов. УБРАТЬ ХАРДКОД!!!!!!
+
+			var expiredSensors = _sensorData
+				.Where(kvp => kvp.Value.Data.LastOrDefault().Timestamp < threshold)
+				.Select(kvp => kvp.Key)
+				.ToList();
+			
+			foreach (var sensor in expiredSensors)
+				_sensorData.Remove(sensor, out _);
 		}
 	}
 }

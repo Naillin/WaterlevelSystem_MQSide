@@ -4,8 +4,10 @@ namespace Area_Manager.Core.Interfaces
 {
 	internal interface ISensorDataService
 	{
-		public Task AddData(SensorDataReceivedEvent sensorEvent, CancellationToken cancellationToken = default);
+		Task AddData(SensorDataReceivedEvent sensorEvent, CancellationToken cancellationToken = default);
 
-		public IReadOnlyDictionary<string, SensorDataDto> GetSensorData();
+		IReadOnlyDictionary<string, SensorDataDto> GetSensorData();
+
+		void DeleteSensorsAsync(IList<string> topicKeys);
 	}
 }

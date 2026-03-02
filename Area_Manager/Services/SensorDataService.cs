@@ -14,7 +14,7 @@ namespace Area_Manager.Services
 		private readonly IRPC_Client _rpcClient;
 
 		private readonly ConcurrentDictionary<string, Lazy<Task<SensorDataDto>>> _sensorDataTasks = new();
-		private readonly ConcurrentDictionary<string, List<(double, long)>> _pendingData = new();
+		private readonly ConcurrentDictionary<string, List<(double Value, long Timestamp)>> _pendingData = new();
 
 		public SensorDataService(IRPC_Client rpcClient, ILogger<SensorDataService> logger)
 		{
@@ -138,6 +138,15 @@ namespace Area_Manager.Services
 
 				// Можно также оставить данные в _pendingData для повторной попытки
 				return new SensorDataDto { TopicPath = "deleted" };
+			}
+		}
+		
+		public void DeleteSensorsAsync(IList<string> topicKeys)
+		{
+			foreach (var key in topicKeys)
+			{
+				_sensorDataTasks.TryRemove(key, out _);
+				_logger.LogInformation($"Sensor {key} is deleted.");
 			}
 		}
 	}
