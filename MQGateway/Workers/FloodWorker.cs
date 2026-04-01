@@ -56,11 +56,10 @@ namespace MQGateway.Workers
 				var dataReceivedEvent = JsonSerializer.Deserialize<FloodAreaCalculatedEvent>(context.Body);
 
 				if (dataReceivedEvent == null)
-					throw new InvalidOperationException($"Failed to deserialize request.");
+					throw new InvalidOperationException("Failed to deserialize request.");
 
-				if (string.IsNullOrWhiteSpace(dataReceivedEvent.TopicPath) ||
-					string.IsNullOrWhiteSpace(dataReceivedEvent.Coordinates))
-					throw new InvalidOperationException($"TopicPath or Coordinates is null.");
+				if (string.IsNullOrWhiteSpace(dataReceivedEvent.TopicPath))
+					throw new InvalidOperationException("TopicPath is null.");
 
 				using (var scope = _scopeFactory.CreateScope())
 				{
@@ -68,7 +67,7 @@ namespace MQGateway.Workers
 
 					await dataRepository.UpsertAreaPoints(
 						dataReceivedEvent.TopicPath!,
-						dataReceivedEvent.Coordinates!
+						dataReceivedEvent.Coordinates
 					);
 
 					_logger.LogDebug($"Data saved for topic: {dataReceivedEvent.TopicPath}");

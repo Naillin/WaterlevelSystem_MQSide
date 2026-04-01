@@ -57,6 +57,7 @@ namespace Area_Manager.Workers
 		{
 			_logger.LogInformation($"Analysis sensor - [{sensor.TopicPath}]");
 
+			// Кэш, что бы не считать еще раз, если новых данных в Data нет
 			if (_sensorData.TryGetValue(sensor.TopicPath, out var sensorData) 
 			    && sensorData.Data.SequenceEqual(sensor.Data))
 				return;
@@ -64,9 +65,6 @@ namespace Area_Manager.Workers
 			try
 			{
 				var coords = await _floodDataService.Analysis(sensor, cancellationToken);
-
-				if (!coords.Any())
-					return;
 
 				_sensorData[sensor.TopicPath] = new SensorDataDto 
 				{
@@ -78,7 +76,9 @@ namespace Area_Manager.Workers
 				var floodAreaCalculatedEvent = new FloodAreaCalculatedEvent
 				{
 					TopicPath = sensor.TopicPath,
-					Coordinates = string.Join(',', coords)
+					Coordinates = coords.Any() // если координат нет, значит и затопления нет - отправялем null.
+						? string.Join(',', coords)
+						: null
 				};
 
 				await _messageProducer.PublishAsync<FloodAreaCalculatedEvent>(
