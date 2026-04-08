@@ -35,7 +35,11 @@ namespace MQGateway.Workers
 		{
 			_logger.LogInformation("Starting collector worker");
 
-			_tag = await _messageConsumer.StartConsumingAsync(_queue, RunAsync, cancellationToken);
+			_tag = await _messageConsumer.StartConsumingAsync(
+				_queue,
+				RunAsync,
+				cancellationToken
+			);
 		}
 
 		public async Task StopAsync(CancellationToken cancellationToken = default)
@@ -74,7 +78,7 @@ namespace MQGateway.Workers
 					};
 
 					await dataRepository.AddDataAsync(data, cancellationToken);
-					_logger.LogDebug($"Data saved for topic: {dataReceivedEvent.TopicPath}");
+					_logger.LogInformation($"Data saved for topic: {dataReceivedEvent.TopicPath}");
 				}
 			}
 			catch (Exception ex)

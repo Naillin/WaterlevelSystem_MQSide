@@ -32,7 +32,7 @@ namespace MQGateway.Workers
 
 		public async Task StartAsync(CancellationToken cancellationToken = default)
 		{
-			_logger.LogInformation("Starting collector worker");
+			_logger.LogInformation("Starting flood worker");
 
 			_tag = await _messageConsumer.StartConsumingAsync(
 				_queue,
@@ -43,7 +43,7 @@ namespace MQGateway.Workers
 
 		public async Task StopAsync(CancellationToken cancellationToken = default)
 		{
-			_logger.LogInformation("Stopping collector worker");
+			_logger.LogInformation("Stopping flood worker");
 
 			await _messageConsumer.StopConsumingAsync(_tag, cancellationToken);
 			_tag = string.Empty;
@@ -70,7 +70,7 @@ namespace MQGateway.Workers
 						dataReceivedEvent.Coordinates
 					);
 
-					_logger.LogDebug($"Data saved for topic: {dataReceivedEvent.TopicPath}");
+					_logger.LogInformation($"Data saved for topic: {dataReceivedEvent.TopicPath}");
 				}
 			}
 			catch (Exception ex)
