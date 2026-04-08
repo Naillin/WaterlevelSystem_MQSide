@@ -1,4 +1,5 @@
-﻿using Area_Manager.Core.Interfaces;
+﻿using System.Collections.Concurrent;
+using Area_Manager.Core.Interfaces;
 using Area_Manager.Core.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ namespace Area_Manager.Workers
 		private readonly ISensorDataService _sensorDataService;
 		private readonly IFloodDataService _floodDataService;
 		private readonly IMessageProducer _messageProducer;
-		private readonly Dictionary<string, SensorDataDto> _sensorData = new();
+		private readonly ConcurrentDictionary<string, SensorDataDto> _sensorData = new();
 
 		public FloodWorker(ISensorDataService sensorDataService, IFloodDataService floodDataService, IMessageProducer messageProducer, ILogger<FloodWorker> logger)
 		{
@@ -41,6 +42,10 @@ namespace Area_Manager.Workers
 				.Select(s => s.Value)
 				.ToList();
 
+			// НУЖЕН МЕХАНИЗМ - отдавать на паралельную обработку только по 10 топиков.
+			// Если в одну fifo-пару будут писать несколько обработчиков и будет один python обработчик, то будет каша из данных.
+			// Нужно что бы запускался свой python-процесс под паралельное вычисление и создавались свои fifo каналы guid-ные.
+			
 			// СОЗДАЕМ задачи для всех сенсоров
 			var analysisTasks = sensorDatas
 				.Where(sensor => sensor.Data.Count() >= 10) // только если данных больше 10 единиц
@@ -104,7 +109,7 @@ namespace Area_Manager.Workers
 				.ToList();
 			
 			foreach (var sensor in expiredSensors)
-				_sensorData.Remove(sensor, out _);
+				_sensorData.TryRemove(sensor, out _);
 		}
 	}
 }
