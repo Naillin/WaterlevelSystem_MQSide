@@ -1,15 +1,20 @@
 ﻿using Area_Manager.Core;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace Area_Manager.GDALPython
 {
 	internal class GDALPython : IDisposable
 	{
+		[DllImport("libc", SetLastError = true, CharSet = CharSet.Ansi)]
+		private static extern int mkfifo(string path, uint mode);
+		
 		private string _pythonPath = "/app/GDALPython/venv/bin/python3";
 		private string _scriptPath = "/app/GDALPython/main.py";
 		private string _fifoToPython = "/app/GDALPython/tmp/csharp_to_python";  // FIFO для отправки данных в Python
 		private string _fifoFromPython = "/app/GDALPython/tmp/python_to_csharp";  // FIFO для получения данных из Python
+		private string _guid;
 
 		//private readonly ILogger<GDALPython> _logger;
 
@@ -17,28 +22,53 @@ namespace Area_Manager.GDALPython
 		private StreamWriter? _writer;
 		private StreamReader? _reader;
 
-		private int debugWrite = 200;
+		private int debugWrite = 500;
 		private static int debugWriteCheck = 0;
+		private long pointNumber = 0;
 
 		public GDALPython(string pythonPath, string scriptPath/*, ILogger<GDALPython> logger*/)
 		{
 			_pythonPath = pythonPath;
 			_scriptPath = scriptPath;
 
+			_guid = Guid.NewGuid().ToString("N");
+			_fifoToPython = $"/app/GDALPython/tmp/csharp_to_python_{_guid}.fifo";
+			_fifoFromPython = $"/app/GDALPython/tmp/python_to_csharp_{_guid}.fifo";
+			CreateFifo(_fifoToPython);
+			CreateFifo(_fifoFromPython);
+			
 			//_logger = logger;
 
 			StartPythonProcess();
 		}
+		
+		private void CreateFifo(string path)
+		{
+			Console.WriteLine($"Сreating fifo {path}");
+			// 0666 (десятичное 438) — чтение/запись для всех
+			int res = mkfifo(path, 438);
+			if (res != 0)
+			{
+				int error = Marshal.GetLastWin32Error();
+				// Ошибка 17 (EEXIST) — файл уже есть, это нормально
+				if (error != 17) 
+					throw new Exception($"Не удалось создать FIFO {path}. Код ошибки: {error}");
+			}
+			
+			Console.WriteLine($"Fifo created: {path}");
+		}
 
 		public void StartPythonProcess()
 		{
+			string arguments = $"\"{_scriptPath}\" --input \"{_fifoToPython}\" --output \"{_fifoFromPython}\"";
+			
 			// Запуск Python-скрипта
 			_pythonProcess = new Process
 			{
 				StartInfo = new ProcessStartInfo
 				{
 					FileName = _pythonPath,
-					Arguments = _scriptPath,
+					Arguments = arguments,
 					WorkingDirectory = "/app/GDALPython",
 					UseShellExecute = false,
 					RedirectStandardInput = false,
@@ -50,15 +80,15 @@ namespace Area_Manager.GDALPython
 			_pythonProcess.StartInfo.EnvironmentVariables["PROJ_LIB"] = "/usr/local/share/proj";
 			_pythonProcess.StartInfo.EnvironmentVariables["PYTHONPATH"] = "/app/GDALPython";
 
-			Console.WriteLine("Start Python.");
+			Console.WriteLine($"Start Python - {_guid}");
 			_pythonProcess.Start();
 			
 			// Открываем FIFO один раз
-			Console.WriteLine("Open writer.");
+			Console.WriteLine("Open writer");
 			_writer = new StreamWriter(_fifoToPython) { AutoFlush = true };
-			Console.WriteLine("Open reader.");
+			Console.WriteLine("Open reader");
 			_reader = new StreamReader(_fifoFromPython);
-			Console.WriteLine("Python started.");
+			Console.WriteLine("Python started");
 		}
 
 		public bool HealthCheck()
@@ -114,10 +144,11 @@ namespace Area_Manager.GDALPython
 					result = Convert.ToDouble(resultStr);
 					if (debugWriteCheck >= debugWrite)
 					{
-						Console.WriteLine($"Высота точки {coordinate.Latitude}, {coordinate.Longitude}: {result}.");
+						Console.WriteLine($"Высота точки №{pointNumber} {coordinate.Latitude}, {coordinate.Longitude}: {result}");
 						debugWriteCheck = 0;
 					}
 					debugWriteCheck++;
+					pointNumber++;
 				}
 			}
 			catch (Exception ex)
@@ -138,14 +169,17 @@ namespace Area_Manager.GDALPython
 
 				if (!_pythonProcess!.HasExited)
 					_pythonProcess.Kill();
+				
+				if (File.Exists(_fifoToPython)) File.Delete(_fifoToPython);
+				if (File.Exists(_fifoFromPython)) File.Delete(_fifoFromPython);
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Error in disposing! Details: {ex.ToString()}");
+				Console.WriteLine($"Error in disposing GDALPython - {_guid}! Details: {ex.ToString()}");
 			}
 			finally
 			{
-				Console.WriteLine("Python stoped.");
+				Console.WriteLine($"Exited from GDALPython - {_guid}");
 			}
 		}
 	}

@@ -1,4 +1,5 @@
 import os
+import argparse
 from gdal_tile_interface import GDALTileInterface
 from tools import write_log
 
@@ -13,6 +14,18 @@ if not os.path.exists(fifo_from_python):
     os.mkfifo(fifo_from_python)
 
 def main():
+    # 1. Настраиваем парсер аргументов
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input', help='Path to input FIFO (C# to Python)', required=True)
+    parser.add_argument('--output', help='Path to output FIFO (Python to C#)', required=True)
+    args = parser.parse_args()
+
+    # 2. Используем полученные пути
+    fifo_to_python = args.input
+    fifo_from_python = args.output
+
+    write_log(f"Python started with pipes: IN={fifo_to_python}, OUT={fifo_from_python}")
+    
     # Инициализация интерфейса
     tiles_folder = '/data'
     summary_file = '/data/summaryFile.json'

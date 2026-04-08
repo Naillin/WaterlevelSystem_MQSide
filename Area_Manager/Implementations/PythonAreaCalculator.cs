@@ -9,7 +9,7 @@ namespace Area_Manager.Implementations
 		private readonly ILogger<PythonAreaCalculator> _logger;
 		private readonly IPointsGenerator _pointsGenerator;
 		
-		private static SemaphoreSlim _semaphore = new SemaphoreSlim(1); //пока 1 операция для теста
+		private static SemaphoreSlim _semaphore = new SemaphoreSlim(1); //пока 1 операция для тестировки. fifo не умеют в паралелизм. нужно переписывать GDALPython
 
 		//хардкод убрать в всех считалках!!!!
 		private double _distance = 200;
