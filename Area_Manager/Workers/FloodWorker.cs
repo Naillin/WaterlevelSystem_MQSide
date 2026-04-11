@@ -44,18 +44,18 @@ namespace Area_Manager.Workers
 				.ToList();
 
 			// Параметры параллелизма: максимум 5 задач одновременно
-			var parallelOptions = new ParallelOptions 
-			{ 
+			var parallelOptions = new ParallelOptions
+			{
 				MaxDegreeOfParallelism = 5,
-				CancellationToken = cancellationToken 
+				CancellationToken = cancellationToken
 			};
 
 			// Parallel.ForEachAsync сам распределит задачи и дождется их завершения
-			await Parallel.ForEachAsync(sensorDatas, parallelOptions, async (sensor, ct) => 
+			await Parallel.ForEachAsync(sensorDatas, parallelOptions, async (sensor, ct) =>
 			{
 				Guid sessionGuid = Guid.NewGuid(); // возможно стоит передавать этот гуид прямиком до GDALPython
         
-				try 
+				try
 				{
 					await TryAnalysisAndSendAsync(sensor, sessionGuid, ct);
 				}
