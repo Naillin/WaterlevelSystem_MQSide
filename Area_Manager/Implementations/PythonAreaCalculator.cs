@@ -10,7 +10,7 @@ namespace Area_Manager.Implementations
 		private readonly ILogger<PythonAreaCalculator> _logger;
 		private readonly IPointsGenerator _pointsGenerator;
 		
-		private static SemaphoreSlim _semaphore = new SemaphoreSlim(1); //пока 1 операция для тестировки
+		//private static SemaphoreSlim _semaphore = new SemaphoreSlim(1); //пока 1 операция для тестировки
 
 		//хардкод убрать в всех считалках!!!!
 		private double _distance = 200;
@@ -38,7 +38,7 @@ namespace Area_Manager.Implementations
 
 		public async Task<List<Coordinate>> FindArea(Coordinate coordinate, double initialHeight = 100, CancellationToken cancellationToken = default)
 		{
-			_semaphore.Wait();
+			//_semaphore.Wait();
 			
 			List<Coordinate> result = new List<Coordinate>();
 			HashSet<Coordinate> checkedPoints = new HashSet<Coordinate>();
@@ -71,7 +71,7 @@ namespace Area_Manager.Implementations
 				}
 			}
 			
-			_semaphore.Release();
+			//_semaphore.Release();
 			return result;
 		}
 	}

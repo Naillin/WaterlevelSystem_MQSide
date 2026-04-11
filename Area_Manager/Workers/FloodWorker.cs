@@ -40,27 +40,37 @@ namespace Area_Manager.Workers
 		{
 			var sensorDatas = _sensorDataService.GetSensorData()
 				.Select(s => s.Value)
+				.Where(sensor => sensor.Data.Count() >= 10)
 				.ToList();
 
-			// НУЖЕН МЕХАНИЗМ - отдавать на паралельную обработку только по 5 топиков.
-			// Если в одну fifo-пару будут писать несколько обработчиков и будет один python обработчик, то будет каша из данных.
-			// Нужно что бы запускался свой python-процесс под паралельное вычисление и создавались свои fifo каналы guid-ные.
-			
-			// СОЗДАЕМ задачи для всех сенсоров
-			var analysisTasks = sensorDatas
-				.Where(sensor => sensor.Data.Count() >= 10) // только если данных больше 10 единиц
-				.Select(sensor => TryAnalysisAndSendAsync(sensor, cancellationToken))
-				.ToList();
+			// Параметры параллелизма: максимум 5 задач одновременно
+			var parallelOptions = new ParallelOptions 
+			{ 
+				MaxDegreeOfParallelism = 5,
+				CancellationToken = cancellationToken 
+			};
 
-			// ЖДЕМ завершения ВСЕХ задач перед выходом из метода
-			await Task.WhenAll(analysisTasks);
+			// Parallel.ForEachAsync сам распределит задачи и дождется их завершения
+			await Parallel.ForEachAsync(sensorDatas, parallelOptions, async (sensor, ct) => 
+			{
+				Guid sessionGuid = Guid.NewGuid(); // возможно стоит передавать этот гуид прямиком до GDALPython
+        
+				try 
+				{
+					await TryAnalysisAndSendAsync(sensor, sessionGuid, ct);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, $"Error analyzing sensor {sensor.TopicPath}");
+				}
+			});
 
-			_logger.LogInformation($"Completed analysis of {analysisTasks.Count} sensors");
+			_logger.LogInformation($"Completed analysis of {sensorDatas.Count} sensors");
 		}
 
-		private async Task TryAnalysisAndSendAsync(SensorDataDto sensor, CancellationToken cancellationToken = default)
+		private async Task TryAnalysisAndSendAsync(SensorDataDto sensor, Guid guid, CancellationToken cancellationToken = default)
 		{
-			_logger.LogInformation($"Analysis sensor - [{sensor.TopicPath}]");
+			_logger.LogInformation($"Analysis sensor - [{sensor.TopicPath}]. Guid - {guid}");
 
 			// Кэш, что бы не считать еще раз, если новых данных в Data нет
 			if (_sensorData.TryGetValue(sensor.TopicPath, out var sensorData) 
@@ -94,7 +104,7 @@ namespace Area_Manager.Workers
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Error in FloodWorker!");
+				_logger.LogError(ex, $"Error in FloodWorker! Guid - {guid}");
 			}
 		}
 
@@ -104,7 +114,9 @@ namespace Area_Manager.Workers
 			long threshold = currentUnixTime - (48 * 60 * 60); // топики не получающие данные уже более 48 часов. УБРАТЬ ХАРДКОД!!!!!!
 
 			var expiredSensors = _sensorData
-				.Where(kvp => kvp.Value.Data.LastOrDefault().Timestamp < threshold)
+				.Where(kvp => 
+					!kvp.Value.Data.Any() ||
+					kvp.Value.Data.LastOrDefault().Timestamp < threshold)
 				.Select(kvp => kvp.Key)
 				.ToList();
 			
