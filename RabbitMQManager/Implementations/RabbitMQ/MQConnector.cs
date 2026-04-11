@@ -145,7 +145,5 @@ namespace RabbitMQManager.Core.Implementations.RabbitMQ
 
 			_disposed = true;
 		}
-
-		~MQConnector() => DisposeAsync().GetAwaiter().GetResult();
 	}
 }
