@@ -2,7 +2,7 @@
 
 namespace Area_Manager.Core
 {
-	internal struct Coordinate : ICoordinate
+	public struct Coordinate : ICoordinate
 	{
 		public int RoundDigits { get; set; } = 6;
 
