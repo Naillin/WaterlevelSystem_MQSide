@@ -1,5 +1,6 @@
 ﻿using Area_Manager.Core;
 using Area_Manager.Core.Interfaces;
+using gdal_python = Area_Manager.GDALPython.GDALPython;
 using Microsoft.Extensions.Logging;
 
 namespace Area_Manager.Implementations
@@ -9,7 +10,7 @@ namespace Area_Manager.Implementations
 		private readonly ILogger<PythonAreaCalculator> _logger;
 		private readonly IPointsGenerator _pointsGenerator;
 		
-		private static SemaphoreSlim _semaphore = new SemaphoreSlim(1); //пока 1 операция для тестировки. fifo не умеют в паралелизм. нужно переписывать GDALPython
+		private static SemaphoreSlim _semaphore = new SemaphoreSlim(1); //пока 1 операция для тестировки
 
 		//хардкод убрать в всех считалках!!!!
 		private double _distance = 200;
@@ -26,11 +27,13 @@ namespace Area_Manager.Implementations
 
 			_logger = logger;
 			
-			using (var _gDALPython = new GDALPython.GDALPython(_pythonPath, _scriptPath))
+			using (var _gDALPython = new gdal_python(_pythonPath, _scriptPath))
 			{
 				if (!_gDALPython.HealthCheck())
 					throw new Exception("GDALPython is cannot started!!!");
 			}
+			
+			_logger.LogInformation("PythonAreaCalculator started");
 		}
 
 		public async Task<List<Coordinate>> FindArea(Coordinate coordinate, double initialHeight = 100, CancellationToken cancellationToken = default)
@@ -43,7 +46,7 @@ namespace Area_Manager.Implementations
 			double stepForHeight = (initialHeight / _coefHeight) / (double)_countOfSubs;
 			double stepForRadius = _radius / (double)_countOfSubs;
 
-			using (var _gDALPython = new GDALPython.GDALPython(_pythonPath, _scriptPath))
+			using (var _gDALPython = new gdal_python(_pythonPath, _scriptPath))
 			{
 				for (double currentRadius = stepForRadius; currentRadius <= 10000; currentRadius = currentRadius + stepForRadius)
 				{

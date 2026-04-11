@@ -2,10 +2,11 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using Area_Manager.Core.Interfaces;
 
 namespace Area_Manager.GDALPython
 {
-	internal class GDALPython : IDisposable
+	internal class GDALPython : IGDALPython, IDisposable
 	{
 		[DllImport("libc", SetLastError = true, CharSet = CharSet.Ansi)]
 		private static extern int mkfifo(string path, uint mode);
