@@ -2,9 +2,9 @@
 using DispatcherAreaManager.Core.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RabbitMQManager.Core.Implementations;
 using RabbitMQManager.Core.Interfaces.MQ;
 using System.Text.Json;
+using RabbitMQManager.Implementations;
 
 namespace DispatcherAreaManager.Implementations.Workers
 {

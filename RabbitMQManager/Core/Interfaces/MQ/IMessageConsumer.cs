@@ -1,4 +1,4 @@
-﻿using RabbitMQManager.Core.Implementations;
+﻿using RabbitMQManager.Implementations;
 
 namespace RabbitMQManager.Core.Interfaces.MQ
 {

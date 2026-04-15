@@ -1,5 +1,4 @@
-﻿using RabbitMQManager.Core.Implementations;
-using RabbitMQManager.Core.Interfaces.MQ.RPC;
+﻿using RabbitMQManager.Core.Interfaces.MQ.RPC;
 using RabbitMQManager.Core.Models;
 using System.Text;
 

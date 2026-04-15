@@ -2,9 +2,9 @@
 using Area_Manager.Core.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RabbitMQManager.Core.Implementations;
 using RabbitMQManager.Core.Interfaces.MQ;
 using System.Text.Json;
+using RabbitMQManager.Implementations;
 
 namespace Area_Manager.Workers
 {
@@ -78,7 +78,7 @@ namespace Area_Manager.Workers
 		private void CheckExpiredTopics()
 		{
 			long currentUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-			long threshold = currentUnixTime - (48 * 60 * 60); // топики не получающие данные уже более 48 часов. УБРАТЬ ХАРДКОД!!!!!!
+			long threshold = currentUnixTime - (48 * 60 * 60); // топики не получающие данные уже более 48 часов. todo: УБРАТЬ ХАРДКОД!!!!!!
 
 			var expiredSensors = _sensorDataService.GetSensorData()
 				.Where(kvp => kvp.Value.Data.LastOrDefault().Timestamp < threshold)

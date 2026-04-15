@@ -1,12 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using RabbitMQManager.Core.Interfaces.MQ;
-using RabbitMQManager.Implementations;
-using System.Text;
-using System.Text.Json;
 
-namespace RabbitMQManager.Core.Implementations.RabbitMQ
+namespace RabbitMQManager.Implementations.RabbitMQ
 {
 	public class RabbitMQProducer : MQConnector, IMessageProducer
 	{

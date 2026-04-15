@@ -1,4 +1,4 @@
-﻿namespace RabbitMQManager.Core.Implementations
+﻿namespace RabbitMQManager.Implementations
 {
 	public class MessageContext
 	{

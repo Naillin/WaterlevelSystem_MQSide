@@ -11,12 +11,12 @@ using MQGateway.Strategies;
 using MQGateway.Workers;
 using MQTT_Data_Сollector.Core.Configs;
 using RabbitMQManager.Core.Attributes;
-using RabbitMQManager.Core.Implementations.RabbitMQ;
 using RabbitMQManager.Core.Interfaces.MQ;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
 using RabbitMQManager.Implementations;
 using RabbitMQManager.Implementations.RabbitMQ.RPC;
 using System.Reflection;
+using RabbitMQManager.Implementations.RabbitMQ;
 
 namespace MQGateway
 {

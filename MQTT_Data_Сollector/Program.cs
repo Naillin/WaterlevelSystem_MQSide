@@ -8,10 +8,10 @@ using MQTT_Data_Сollector.Core.Interfaces;
 using MQTT_Data_Сollector.Implementations;
 using MQTT_Data_Сollector.Services;
 using MQTT_Data_Сollector.Workers;
-using RabbitMQManager.Core.Implementations.RabbitMQ;
 using RabbitMQManager.Core.Interfaces.MQ;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
 using RabbitMQManager.Implementations;
+using RabbitMQManager.Implementations.RabbitMQ;
 using RabbitMQManager.Implementations.RabbitMQ.RPC;
 
 namespace MQTT_Data_Сollector

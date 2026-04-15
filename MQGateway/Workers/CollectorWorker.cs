@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 using MQGateway.Core.Entities;
 using MQGateway.Core.Interfaces;
 using MQGateway.Core.Models;
-using RabbitMQManager.Core.Implementations;
 using RabbitMQManager.Core.Interfaces.MQ;
 using System.Text.Json;
+using RabbitMQManager.Implementations;
 
 namespace MQGateway.Workers
 {

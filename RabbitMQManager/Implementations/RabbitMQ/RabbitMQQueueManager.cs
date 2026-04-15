@@ -2,9 +2,8 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using RabbitMQManager.Core.Interfaces.MQ;
-using RabbitMQManager.Implementations;
 
-namespace RabbitMQManager.Core.Implementations.RabbitMQ
+namespace RabbitMQManager.Implementations.RabbitMQ
 {
 	public class RabbitMQQueueManager : MQConnector, IMessageQueueManager
 	{

@@ -1,5 +1,5 @@
-﻿using RabbitMQManager.Core.Implementations;
-using RabbitMQManager.Core.Models;
+﻿using RabbitMQManager.Core.Models;
+using RabbitMQManager.Implementations;
 
 namespace RabbitMQManager.Core.Interfaces.MQ.RPC
 {

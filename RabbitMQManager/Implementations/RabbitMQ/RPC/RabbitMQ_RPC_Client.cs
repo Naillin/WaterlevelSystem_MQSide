@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
-using RabbitMQManager.Core.Implementations;
 using RabbitMQManager.Core.Interfaces.MQ;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
 using System.Text;
@@ -63,11 +62,11 @@ namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 				request.RequestId = requestId;
 				request.QueueName = responseQueue.QueueName;
 
-				await _messageProducer.PublishAsync(// Использовать типизированный метод
+				await _messageProducer.PublishAsync(// todo: Использовать типизированный метод
 					JsonSerializer.Serialize(request),
 					_requestExchange,
 					_requestRoutingKey,
-					requestType,// Использовать типизированный метод
+					requestType,// todo: Использовать типизированный метод
 					new Dictionary<string, object> {
 						["RequestId"] = requestId,
 						["RequestType"] = requestType

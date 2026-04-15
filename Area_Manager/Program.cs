@@ -11,10 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using RabbitMQManager.Core.Implementations.RabbitMQ;
 using RabbitMQManager.Core.Interfaces.MQ;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
 using RabbitMQManager.Implementations;
+using RabbitMQManager.Implementations.RabbitMQ;
 using RabbitMQManager.Implementations.RabbitMQ.RPC;
 
 namespace Area_Manager
