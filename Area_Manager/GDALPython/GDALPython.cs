@@ -99,7 +99,7 @@ namespace Area_Manager.GDALPython
 				Console.WriteLine("Performing HealthCheck...");
 				_writer!.WriteLine("hello_from_csharp");
         
-				// Ждем ответа (можно добавить Timeout для надежности)
+				// Ждем ответа todo: можно добавить Timeout для надежности
 				string? response = _reader!.ReadLine();
         
 				if (response == "hello_from_python")
@@ -121,8 +121,6 @@ namespace Area_Manager.GDALPython
 		public async Task<double> GetElevation(Coordinate coordinate, CancellationToken cancellationToken = default)
 		{
 			double result = -32768;
-
-			//Console.WriteLine("GetElevation method from Python.");
 
 			try
 			{

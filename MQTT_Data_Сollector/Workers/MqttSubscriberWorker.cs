@@ -6,7 +6,7 @@ using RabbitMQManager.Core.Interfaces.MQ.RPC;
 
 namespace MQTT_Data_Сollector.Workers
 {
-	internal class MqttSubscriberWorker : BackgroundService // в BackgroundService переделать
+	internal class MqttSubscriberWorker : BackgroundService
 	{
 		private readonly IMqttClient _mqttClient;
 		private readonly IRPC_Client _rpcClient;
@@ -64,7 +64,7 @@ namespace MQTT_Data_Сollector.Workers
 					TimeSpan.FromSeconds(30),
 					cancellationToken
 				);
-				//убрать хардкод!!!!!!!!!!!!!!!!!!!
+				// todo: убрать хардкод!!!!!!!!!!!!!!!!!!!
 
 				if (!response.Success)
 				{

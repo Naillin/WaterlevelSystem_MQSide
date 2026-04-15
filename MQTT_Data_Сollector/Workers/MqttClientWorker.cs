@@ -32,7 +32,7 @@ namespace MQTT_Data_Сollector.Workers
 					if (!_mqttClient.IsConnected()) // Проверьте правильное свойство для вашего клиента
 					{
 						_logger.LogWarning("MQTT client is disconnected. Attempting to handle...");
-						// Здесь можно добавить логику переподключения
+						// todo: Здесь можно добавить логику переподключения
 					}
 
 					await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);

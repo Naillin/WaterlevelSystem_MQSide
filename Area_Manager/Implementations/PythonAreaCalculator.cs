@@ -12,7 +12,7 @@ namespace Area_Manager.Implementations
 		
 		//private static SemaphoreSlim _semaphore = new SemaphoreSlim(1); //пока 1 операция для тестировки
 
-		//хардкод убрать в всех считалках!!!!
+		// todo: хардкод убрать в всех считалках!!!!
 		private double _distance = 200;
 		private double _radius = 10000;
 		private int _countOfSubs = 100;

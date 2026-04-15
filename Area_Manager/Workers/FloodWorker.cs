@@ -53,7 +53,7 @@ namespace Area_Manager.Workers
 			// Parallel.ForEachAsync сам распределит задачи и дождется их завершения
 			await Parallel.ForEachAsync(sensorDatas, parallelOptions, async (sensor, ct) =>
 			{
-				Guid sessionGuid = Guid.NewGuid(); // возможно стоит передавать этот гуид прямиком до GDALPython
+				Guid sessionGuid = Guid.NewGuid(); // todo: возможно стоит передавать этот гуид прямиком до GDALPython
         
 				try
 				{
@@ -111,7 +111,7 @@ namespace Area_Manager.Workers
 		private void DeleteExpiredTopics()
 		{
 			long currentUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-			long threshold = currentUnixTime - (48 * 60 * 60); // топики не получающие данные уже более 48 часов. УБРАТЬ ХАРДКОД!!!!!!
+			long threshold = currentUnixTime - (48 * 60 * 60); // топики не получающие данные уже более 48 часов. todo: УБРАТЬ ХАРДКОД!!!!!!
 
 			var expiredSensors = _sensorData
 				.Where(kvp => 

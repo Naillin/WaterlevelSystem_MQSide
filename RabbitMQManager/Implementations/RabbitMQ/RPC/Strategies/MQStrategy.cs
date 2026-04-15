@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace RabbitMQManager.Implementations.RabbitMQ.RPC.Strategies
 {
-	//[Command("BasicCommand")]
+	// [Command("BasicCommand")]
 	public abstract class MQStrategy<TRequest, TResponse> : IMQStrategy
 	where TRequest : IMQRequest
 	where TResponse : IMQResponse, new()

@@ -61,7 +61,7 @@ namespace Area_Manager.Services
 		private CancellationTokenSource GetCombineCancellationToken(CancellationToken globalToken) =>
 			CancellationTokenSource.CreateLinkedTokenSource(
 				globalToken,
-				new CancellationTokenSource(TimeSpan.FromMinutes(5)).Token // убрать хардкод
+				new CancellationTokenSource(TimeSpan.FromMinutes(5)).Token // todo: убрать хардкод
 			);
 	}
 }

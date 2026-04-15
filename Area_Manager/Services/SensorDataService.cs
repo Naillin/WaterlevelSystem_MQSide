@@ -22,7 +22,7 @@ namespace Area_Manager.Services
 
 			_logger = logger;
 			
-			// При запуске один раз вытянуть данные по топикам из кеша. Нужен кеш в который это попадет.
+			// todo: При запуске один раз вытянуть данные по топикам из кеша\database. Нужен кеш в который это попадет.
 		}
 
 		public IReadOnlyDictionary<string, SensorDataDto> GetSensorData()
@@ -36,7 +36,7 @@ namespace Area_Manager.Services
 				{
 					result[kvp.Key] = kvp.Value.Value.Result;
 				}
-				// Можно также добавить логику для сенсоров, которые еще в процессе создания
+				// todo: Можно также добавить логику для сенсоров, которые еще в процессе создания
 			}
 
 			return result;
@@ -138,7 +138,7 @@ namespace Area_Manager.Services
 				// Логируем ошибку, но не пробрасываем выше, т.к. это фоновая задача
 				_logger.LogError(ex, $"Registration error for sensor - {topicPath}.");
 
-				// Можно также оставить данные в _pendingData для повторной попытки
+				// todo: Можно также оставить данные в _pendingData для повторной попытки
 				return new SensorDataDto { TopicPath = "deleted" };
 			}
 		}
