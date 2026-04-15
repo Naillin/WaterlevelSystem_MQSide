@@ -62,7 +62,7 @@ namespace MQGateway.DataWork.Repositories
 			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			return await db.Data
 				.Where(d => d.ID_Topic == topicId)
-				.OrderByDescending(d => d.Time_Data)
+				.OrderBy(d => d.Time_Data)
 				.ToListAsync(cancellationToken);
 		}
 
@@ -71,7 +71,7 @@ namespace MQGateway.DataWork.Repositories
 			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
 			return await db.Data
 				.Where(d => d.ID_Topic == topicId)
-				.OrderByDescending(d => d.Time_Data)
+				.OrderBy(d => d.Time_Data)
 				.Take(limit)
 				.ToListAsync(cancellationToken);
 		}
