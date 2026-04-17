@@ -97,9 +97,6 @@ namespace RabbitMQManager.Implementations.RabbitMQ
 			}
 		}
 
-		public IReadOnlyDictionary<string, string> GetTags()
-		{
-			return _tags.AsReadOnly();
-		}
+		public IReadOnlyDictionary<string, string> GetTags() => _tags.AsReadOnly();
 	}
 }

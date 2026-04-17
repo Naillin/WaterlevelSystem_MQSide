@@ -88,11 +88,13 @@ namespace RabbitMQManager.Implementations.RabbitMQ.RPC
 			finally
 			{
 				lock (_lock)
-				{
 					_pendingRequests.Remove(requestId);
+				
+				if (_tags.Remove(responseQueue.QueueName, out var consumerTag))
+				{
+					await _messageConsumer.StopConsumingAsync(consumerTag);
+					await _queueManager.DeleteQueue(responseQueue.QueueName);
 				}
-				await _messageConsumer.StopConsumingAsync(_tags[responseQueue.QueueName]);
-				await _queueManager.DeleteQueue(responseQueue.QueueName);
 			}
 		}
 
