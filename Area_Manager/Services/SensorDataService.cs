@@ -120,6 +120,18 @@ namespace Area_Manager.Services
 				if (!topicInfoResponse.Success)
 					throw new InvalidOperationException($"Registration error for sensor - {topicPath}. Details {topicInfoResponse.ErrorMessage}.");
 
+				if (!topicInfoResponse.Success)
+				{
+					_logger.LogWarning($"Topic {topicPath} is invalid in DB. Stopping attempts.");
+            
+					// Очищаем накопленные данные, чтобы не жрать память
+					_pendingData.TryRemove(topicPath, out _); 
+            
+					// Возвращаем "заглушку". Теперь IsSensorFullyCreated будет true, 
+					// но мы будем знать, что это "битый" топик.
+					return new SensorDataDto { TopicPath = "INVALID_TOPIC" };
+				}
+				
 				var sensorData = new SensorDataDto
 				{
 					TopicPath = topicInfoResponse.TopicPath,
@@ -137,9 +149,12 @@ namespace Area_Manager.Services
 			{
 				// Логируем ошибку, но не пробрасываем выше, т.к. это фоновая задача
 				_logger.LogError(ex, $"Registration error for sensor - {topicPath}.");
-
-				// todo: Можно также оставить данные в _pendingData для повторной попытки
-				return new SensorDataDto { TopicPath = "deleted" };
+				
+				// Удаляем себя из словаря, чтобы следующая попытка AddData 
+				// снова вызвала CreateSensorAsync, а не вернула этот упавший Task.
+				_sensorDataTasks.TryRemove(topicPath, out _);
+        
+				throw; // Пробрасываем ошибку дальше в Task
 			}
 		}
 		
