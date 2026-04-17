@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Globalization;
+using Microsoft.Extensions.Logging;
 using MQTT_Data_Сollector.Core.Interfaces;
 using MQTT_Data_Сollector.Core.Models;
 using RabbitMQManager.Core.Interfaces.MQ;
@@ -19,17 +20,17 @@ namespace MQTT_Data_Сollector.Services
 		public async Task PublishDataAsync(string topic, string value)
 		{
 			_logger.LogInformation($"Publish data in queue.");
-			long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+			var date = DateTimeOffset.UtcNow;
 
 			var message = new SensorDataReceivedEvent
 			{
 				TopicPath = topic,
-				Value = double.Parse(value),
-				Timestamp = timestamp
+				Value = double.Parse(value, CultureInfo.InvariantCulture),
+				Date = date
 			};
 			await _messageProducer.PublishAsync<SensorDataReceivedEvent>(message);
 
-			_logger.LogInformation($"Publish value {value} at {timestamp.ToString()} time.");
+			_logger.LogInformation($"Publish value {value} at {date.ToString()} time.");
 		}
 	}
 }

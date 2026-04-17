@@ -67,25 +67,30 @@ namespace Area_Manager.Workers
 
 				await _sensorDataService.AddData(sensorEvent, cancellationToken);
 
-				_logger.LogInformation($"Added data for topic [{sensorEvent.TopicPath}]. Data: {sensorEvent.Value}; {sensorEvent.Timestamp}.");
+				_logger.LogInformation($"Added data for topic [{sensorEvent.TopicPath}]. Data: {sensorEvent.Value}; {sensorEvent.Date}.");
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "Error handling response message in sensor data worker");
 			}
 		}
-
+		
 		private void CheckExpiredTopics()
 		{
-			long currentUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-			long threshold = currentUnixTime - (48 * 60 * 60); // топики не получающие данные уже более 48 часов. todo: УБРАТЬ ХАРДКОД!!!!!!
+			// Выносим в переменную (в будущем это легко забрать из appsettings.json)
+			TimeSpan expirationThreshold = TimeSpan.FromHours(48);// топики не получающие данные уже более 48 часов. todo: УБРАТЬ ХАРДКОД!!!!!!
+			DateTimeOffset cutoffTime = DateTimeOffset.UtcNow - expirationThreshold;
 
 			var expiredSensors = _sensorDataService.GetSensorData()
-				.Where(kvp => kvp.Value.Data.LastOrDefault().Timestamp < threshold)
+				.Where(kvp => kvp.Value.Data.Any() && kvp.Value.Data.LastOrDefault().Date < cutoffTime)
 				.Select(kvp => kvp.Key)
 				.ToList();
-			
-			_sensorDataService.DeleteSensorsAsync(expiredSensors);
+    
+			if (expiredSensors.Any())
+			{
+				_logger.LogInformation($"Found {expiredSensors.Count} expired sensors. Deleting...");
+				_sensorDataService.DeleteSensorsAsync(expiredSensors);
+			}
 		}
 	}
 }

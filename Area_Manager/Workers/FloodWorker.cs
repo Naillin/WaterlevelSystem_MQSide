@@ -73,9 +73,17 @@ namespace Area_Manager.Workers
 			_logger.LogInformation($"Analysis sensor - [{sensor.TopicPath}]. Guid - {guid}");
 
 			// Кэш, что бы не считать еще раз, если новых данных в Data нет
-			if (_sensorData.TryGetValue(sensor.TopicPath, out var sensorData) 
-			    && sensorData.Data.SequenceEqual(sensor.Data))
-				return;
+			if (_sensorData.TryGetValue(sensor.TopicPath, out var cachedData))
+			{
+				var lastCached = cachedData.Data.LastOrDefault().Date;
+				var lastCurrent = sensor.Data.LastOrDefault().Date;
+
+				if (lastCached == lastCurrent)
+				{
+					_logger.LogDebug($"No new data for - [{sensor.TopicPath}]");
+					return;
+				}
+			}
 			
 			try
 			{
@@ -107,21 +115,24 @@ namespace Area_Manager.Workers
 				_logger.LogError(ex, $"Error in FloodWorker! Guid - {guid}");
 			}
 		}
-
+		
 		private void DeleteExpiredTopics()
 		{
-			long currentUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-			long threshold = currentUnixTime - (48 * 60 * 60); // топики не получающие данные уже более 48 часов. todo: УБРАТЬ ХАРДКОД!!!!!!
+			// Выносим в переменную (в будущем это легко забрать из appsettings.json)
+			TimeSpan expirationThreshold = TimeSpan.FromHours(48);// топики не получающие данные уже более 48 часов. todo: УБРАТЬ ХАРДКОД!!!!!!
+			DateTimeOffset cutoffTime = DateTimeOffset.UtcNow - expirationThreshold;
 
-			var expiredSensors = _sensorData
-				.Where(kvp => 
-					!kvp.Value.Data.Any() ||
-					kvp.Value.Data.LastOrDefault().Timestamp < threshold)
+			var expiredSensors = _sensorDataService.GetSensorData()
+				.Where(kvp => kvp.Value.Data.Any() && kvp.Value.Data.LastOrDefault().Date < cutoffTime)
 				.Select(kvp => kvp.Key)
 				.ToList();
-			
-			foreach (var sensor in expiredSensors)
-				_sensorData.TryRemove(sensor, out _);
+    
+			if (expiredSensors.Any())
+			{
+				_logger.LogInformation($"Found {expiredSensors.Count} expired sensors. Deleting...");
+				foreach (var sensor in expiredSensors)
+					_sensorData.TryRemove(sensor, out _);
+			}
 		}
 	}
 }

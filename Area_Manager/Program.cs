@@ -95,7 +95,13 @@ namespace Area_Manager
 
 				services.AddSingleton<ITrendCalculator, LinearTrendCalculator>();
 				services.AddSingleton<IMovingAverage>(provider => new ExponentialMovingAverage(2.0, 7.0));
-				services.AddSingleton<IPredictor, EMAPredictor>();
+				services.AddSingleton<IPredictor, EMAPredictor>(provider =>
+				{
+					var ema = provider.GetRequiredService<IMovingAverage>();
+					var trendCalculator = provider.GetRequiredService<ITrendCalculator>();
+					
+					return new EMAPredictor(ema, trendCalculator, 2.0); // todo: убрать хардкод
+				});
 
 				services.AddSingleton<IPointsGenerator, CircleGenerator>();
 				services.AddSingleton<IAreaCalculator, PythonAreaCalculator>();

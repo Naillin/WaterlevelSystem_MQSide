@@ -68,13 +68,11 @@ namespace MQGateway.Workers
 					if (topic == null)
 						throw new InvalidOperationException($"Failed to get topic.");
 
-					var timeUnspecified = DateTimeOffset.FromUnixTimeSeconds(dataReceivedEvent.Timestamp).DateTime;
-					var timeData = DateTime.SpecifyKind(timeUnspecified, DateTimeKind.Utc);
 					var data = new Data
 					{
 						ID_Topic = topic.ID_Topic,
 						Value_Data = dataReceivedEvent.Value.ToString(),
-						Time_Data = timeData
+						Time_Data = dataReceivedEvent.Date
 					};
 
 					await dataRepository.AddDataAsync(data, cancellationToken);

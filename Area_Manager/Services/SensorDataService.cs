@@ -14,7 +14,7 @@ namespace Area_Manager.Services
 		private readonly IRPC_Client _rpcClient;
 
 		private readonly ConcurrentDictionary<string, Lazy<Task<SensorDataDto>>> _sensorDataTasks = new();
-		private readonly ConcurrentDictionary<string, List<(double Value, long Timestamp)>> _pendingData = new();
+		private readonly ConcurrentDictionary<string, List<(double Value, DateTimeOffset Date)>> _pendingData = new();
 
 		public SensorDataService(IRPC_Client rpcClient, ILogger<SensorDataService> logger)
 		{
@@ -53,17 +53,17 @@ namespace Area_Manager.Services
 			if (IsSensorFullyCreated(topicPath))
 			{
 				_logger.LogInformation($"Adding data to {topicPath}.");
-				AddDataToExistingSensor(topicPath, sensorEvent.Value, sensorEvent.Timestamp);
+				AddDataToExistingSensor(topicPath, sensorEvent.Value, sensorEvent.Date);
 				return Task.CompletedTask;
 			}
 
 			// МЕДЛЕННЫЙ ПУТЬ: сенсор еще не готов
 			_logger.LogInformation($"Unregistered sensor in the system - {topicPath}. Adding data to temporary storage.");
 			_pendingData.AddOrUpdate(topicPath,
-				new List<(double, long)> { (sensorEvent.Value, sensorEvent.Timestamp) },
+				new List<(double, DateTimeOffset)> { (sensorEvent.Value, sensorEvent.Date) },
 				(key, existing) =>
 				{
-					existing.Add((sensorEvent.Value, sensorEvent.Timestamp));
+					existing.Add((sensorEvent.Value, sensorEvent.Date));
 					return existing;
 				});
 
@@ -79,14 +79,14 @@ namespace Area_Manager.Services
 			lazyTask.IsValueCreated &&
 			lazyTask.Value.IsCompletedSuccessfully;
 
-		private void AddDataToExistingSensor(string topicPath, double value, long timestamp)
+		private void AddDataToExistingSensor(string topicPath, double value, DateTimeOffset Date)
 		{
 			if (_sensorDataTasks.TryGetValue(topicPath, out var lazyTask) &&
 				lazyTask.IsValueCreated &&
 				lazyTask.Value.IsCompletedSuccessfully)
 			{
 				var sensorData = lazyTask.Value.Result;
-				sensorData.Data.Add((value, timestamp));
+				sensorData.Data.Add((value, Date));
 			}
 		}
 
