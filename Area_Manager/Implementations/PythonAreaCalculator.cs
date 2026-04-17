@@ -36,7 +36,7 @@ namespace Area_Manager.Implementations
 			_logger.LogInformation("PythonAreaCalculator started");
 		}
 
-		public async Task<List<Coordinate>> FindArea(Coordinate coordinate, double initialHeight = 100, CancellationToken cancellationToken = default)
+		public async Task<IList<Coordinate>> FindArea(Coordinate coordinate, double initialHeight = 100, CancellationToken cancellationToken = default)
 		{
 			//_semaphore.Wait();
 			

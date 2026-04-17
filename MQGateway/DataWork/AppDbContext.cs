@@ -50,7 +50,7 @@ namespace MQGateway.DataWork
 			modelBuilder.Entity<AreaPoint>(entity =>
 			{
 				entity.HasKey(a => a.ID_AreaPoint);
-				entity.Property(a => a.Depression_AreaPoint).IsRequired();
+				entity.Property(a => a.Depression_AreaPoint);
 				entity.HasOne(a => a.Topic)
 					  .WithMany(t => t.AreaPoints)
 					  .HasForeignKey(a => a.ID_Topic)
