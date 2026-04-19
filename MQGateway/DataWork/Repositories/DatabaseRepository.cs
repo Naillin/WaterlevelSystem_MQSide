@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using MQGateway.Core.Entities;
 using MQGateway.Core.Interfaces;
 
@@ -91,12 +92,19 @@ namespace MQGateway.DataWork.Repositories
 			await db.SaveChangesAsync(cancellationToken);
 		}
 
-		public async Task UpsertAreaPoints(string topicPath, string? points, CancellationToken cancellationToken = default)
+		public async Task UpsertPredictionData(int topicId, string? points, IList<Ema>? emas, IList<Prediction>? predictions, CancellationToken cancellationToken = default)
 		{
+			var emasJson = emas != null
+				? JsonSerializer.Serialize(emas)
+				: null;
+			var predsJson = predictions != null
+				? JsonSerializer.Serialize(predictions)
+				: null;
+
 			await using var db = await _factory.CreateDbContextAsync(cancellationToken);
-			
+
 			await db.Database.ExecuteSqlInterpolatedAsync(
-				$"SELECT public.upsert_areapoints_by_topic_path({topicPath}, {points})",
+				$"SELECT public.upsert_flood_data_package({topicId}, {points}, {emasJson}::jsonb, {predsJson}::jsonb)",
 				cancellationToken
 			);
 		}

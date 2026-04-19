@@ -24,6 +24,6 @@ namespace MQGateway.Core.Interfaces
 
 		Task AddDataAsync(Data data, CancellationToken cancellationToken = default);
 
-		Task UpsertAreaPoints(string topicPath, string? points, CancellationToken cancellationToken = default);
+		Task UpsertPredictionData(int topicId, string? points, IList<Ema>? emas, IList<Prediction>? predictions, CancellationToken cancellationToken = default);
 	}
 }

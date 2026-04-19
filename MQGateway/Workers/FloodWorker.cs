@@ -5,6 +5,7 @@ using MQGateway.Core.Interfaces;
 using MQGateway.Core.Models;
 using RabbitMQManager.Core.Interfaces.MQ;
 using System.Text.Json;
+using MQGateway.Core.Entities;
 using RabbitMQManager.Implementations;
 
 namespace MQGateway.Workers
@@ -65,9 +66,26 @@ namespace MQGateway.Workers
 				{
 					var dataRepository = scope.ServiceProvider.GetRequiredService<IDataRepository>();
 
-					await dataRepository.UpsertAreaPoints(
-						dataReceivedEvent.TopicPath!,
-						dataReceivedEvent.Coordinates
+					var topic = await dataRepository.GetTopicAsync(dataReceivedEvent.TopicPath, cancellationToken);
+					if (topic == null)
+					{
+						_logger.LogError($"Topic {dataReceivedEvent.TopicPath} not found");
+						return;
+					}
+
+					var emaData = dataReceivedEvent.EmaData?
+						.Select(ema => ConvertToEma(topic.ID_Topic, ema))
+						.ToList();
+					var predictions = dataReceivedEvent.PredictionData?
+						.Select(point => ConvertToPrediction(topic.ID_Topic, point))
+						.ToList();
+					
+					await dataRepository.UpsertPredictionData(
+						topic.ID_Topic,
+						dataReceivedEvent.Coordinates,
+						emaData,
+						predictions,
+						cancellationToken
 					);
 
 					_logger.LogInformation($"Data saved for topic: {dataReceivedEvent.TopicPath}");
@@ -78,5 +96,18 @@ namespace MQGateway.Workers
 				_logger.LogError(ex, "Error in collector worker");
 			}
 		}
+
+		public Ema ConvertToEma(int idTopic, double ema) => new()
+		{
+			ID_Topic = idTopic,
+			Value_Ema = ema.ToString()
+		};
+
+		public Prediction ConvertToPrediction(int idTopic, ValueAtTime point) => new()
+		{
+			ID_Topic = idTopic,
+			Value_Prediction = point.Value.ToString(),
+			Time_Prediction = point.DateTime
+		};
 	}
 }

@@ -40,10 +40,29 @@ namespace MQGateway.DataWork
 			{
 				entity.HasKey(d => d.ID_Data);
 				entity.Property(d => d.Time_Data).IsRequired();
+				entity.Property(d => d.Value_Data).IsRequired();
 				entity.HasOne(d => d.Topic)
 					  .WithMany(t => t.Data)
 					  .HasForeignKey(d => d.ID_Topic)
 					  .IsRequired();
+			});
+			
+			modelBuilder.Entity<Ema>(entity =>
+			{
+				entity.HasKey(d => d.ID_Ema);
+				entity.HasOne(d => d.Topic)
+					.WithMany(t => t.Emas)
+					.HasForeignKey(d => d.ID_Topic)
+					.IsRequired();
+			});
+			
+			modelBuilder.Entity<Prediction>(entity =>
+			{
+				entity.HasKey(d => d.ID_Prediction);
+				entity.HasOne(d => d.Topic)
+					.WithMany(t => t.Predictions)
+					.HasForeignKey(d => d.ID_Topic)
+					.IsRequired();
 			});
 
 			// Настройка AreaPoint (каскад уже определен в SQL)

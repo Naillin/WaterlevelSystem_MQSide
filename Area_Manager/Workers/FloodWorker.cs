@@ -87,7 +87,7 @@ namespace Area_Manager.Workers
 			
 			try
 			{
-				var coords = await _floodDataService.Analysis(sensor, cancellationToken);
+				var (coordinates, smoothed, predictions) = await _floodDataService.Analysis(sensor, cancellationToken);
 
 				_sensorData[sensor.TopicPath] = new SensorDataDto 
 				{
@@ -99,9 +99,11 @@ namespace Area_Manager.Workers
 				var floodAreaCalculatedEvent = new FloodAreaCalculatedEvent
 				{
 					TopicPath = sensor.TopicPath,
-					Coordinates = coords.Any() // если координат нет, значит и затопления нет - отправялем null.
-						? string.Join(',', coords)
-						: null
+					Coordinates = coordinates.Any() // если координат нет, значит и затопления нет - отправляем null.
+						? string.Join(',', coordinates)
+						: null,
+					EmaData = smoothed.ToList(),
+					PredictionData = predictions.ToList()
 				};
 
 				await _messageProducer.PublishAsync<FloodAreaCalculatedEvent>(

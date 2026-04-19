@@ -94,13 +94,12 @@ namespace Area_Manager
 				services.AddHostedService<MQConnectorWorker>();
 
 				services.AddSingleton<ITrendCalculator, LinearTrendCalculator>();
-				services.AddSingleton<IMovingAverage>(provider => new ExponentialMovingAverage(2.0, 7.0));
-				services.AddSingleton<IPredictor, EMAPredictor>(provider =>
+				services.AddSingleton<IMovingAverage>(provider => new ExponentialMovingAverage(2.0, 7.0)); // todo: убрать хардкод
+				services.AddSingleton<IPredictor, Predictor>(provider =>
 				{
-					var ema = provider.GetRequiredService<IMovingAverage>();
 					var trendCalculator = provider.GetRequiredService<ITrendCalculator>();
 					
-					return new EMAPredictor(ema, trendCalculator, 2.0); // todo: убрать хардкод
+					return new Predictor(trendCalculator, 2.0); // todo: убрать хардкод
 				});
 
 				services.AddSingleton<IPointsGenerator, CircleGenerator>();

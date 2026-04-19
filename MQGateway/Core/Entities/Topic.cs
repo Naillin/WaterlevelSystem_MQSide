@@ -43,11 +43,17 @@ namespace MQGateway.Core.Entities
 		public ICollection<Data> Data { get; set; }
 
 		public ICollection<AreaPoint> AreaPoints { get; set; }
+		
+		public ICollection<Ema> Emas { get; set; }
+		
+		public ICollection<Prediction> Predictions { get; set; }
 
 		public Topic()
 		{
 			Data = new List<Data>();
 			AreaPoints = new List<AreaPoint>();
+			Emas = new List<Ema>();
+			Predictions = new List<Prediction>();
 		}
 	}
 }
