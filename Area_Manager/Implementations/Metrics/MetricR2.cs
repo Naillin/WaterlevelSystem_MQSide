@@ -4,7 +4,7 @@ namespace Area_Manager.Implementations.Metrics
 {
 	internal class MetricR2 : IMetric
 	{
-		public double Calculate(List<double> actualData, List<double> maData)
+		public double Calculate(IList<double> actualData, IList<double> maData)
 		{
 			// Вычисляем среднее значение actual
 			double meanActual = actualData.Average();

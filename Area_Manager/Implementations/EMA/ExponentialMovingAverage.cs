@@ -6,11 +6,11 @@ namespace Area_Manager.Implementations.EMA
 	{
 		private readonly double _alpha;
 
-		public ExponentialMovingAverage(double smoothing, double windowSize) => _alpha = smoothing / (windowSize + 1);
+		public ExponentialMovingAverage(double smoothing = 2.0, double windowSize = 7.0) => _alpha = smoothing / (windowSize + 1);
 
-		public List<double> Calculate(List<double> values)
+		public IList<double> Calculate(List<double> values)
 		{
-			if (values == null || !values.Any())
+			if (!values.Any())
 				return new List<double>();
 
 			double lastEMA = values[0];

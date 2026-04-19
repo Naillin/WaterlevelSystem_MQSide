@@ -2,6 +2,6 @@
 {
 	internal interface IMetric
 	{
-		double Calculate(List<double> actualData, List<double> maData);
+		double Calculate(IList<double> actualData, IList<double> maData);
 	}
 }

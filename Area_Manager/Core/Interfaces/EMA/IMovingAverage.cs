@@ -2,6 +2,6 @@
 {
 	internal interface IMovingAverage
 	{
-		List<double> Calculate(List<double> values);
+		IList<double> Calculate(List<double> values);
 	}
 }
