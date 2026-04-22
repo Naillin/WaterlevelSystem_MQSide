@@ -1,13 +1,13 @@
-﻿using Area_Manager.Core.Models;
+﻿using Contracts.Models;
+using Contracts.Models.RabbitMQ;
 
-namespace Area_Manager.Core.Interfaces
+namespace Area_Manager.Core.Interfaces;
+
+internal interface ISensorDataService
 {
-	internal interface ISensorDataService
-	{
-		Task AddData(SensorDataReceivedEvent sensorEvent, CancellationToken cancellationToken = default);
+    Task AddData(SensorDataReceivedEvent sensorEvent, CancellationToken cancellationToken = default);
 
-		IReadOnlyDictionary<string, SensorDataDto> GetSensorData();
+    IReadOnlyDictionary<string, SensorDataDto> GetSensorData();
 
-		void DeleteSensorsAsync(IList<string> topicKeys);
-	}
+    void DeleteSensorsAsync(IList<string> topicKeys);
 }

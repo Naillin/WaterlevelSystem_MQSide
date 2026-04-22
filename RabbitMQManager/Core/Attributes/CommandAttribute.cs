@@ -1,13 +1,12 @@
-﻿namespace RabbitMQManager.Core.Attributes
-{
-	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-	public class CommandAttribute : Attribute
-	{
-		public string Name { get; }
+﻿namespace RabbitMQManager.Core.Attributes;
 
-		public CommandAttribute(string name)
-		{
-			Name = name;
-		}
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+public class CommandAttribute : Attribute
+{
+	public string Name { get; }
+
+	public CommandAttribute(string name)
+	{
+		Name = name;
 	}
 }

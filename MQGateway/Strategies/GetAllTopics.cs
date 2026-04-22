@@ -1,43 +1,42 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Contracts.Models.RabbitMQ.RPC.GetAllTopics;
+using Microsoft.Extensions.DependencyInjection;
 using MQGateway.Core.Interfaces;
-using MQGateway.Core.Models.GetAllTopics;
 using RabbitMQManager.Core.Attributes;
 using RabbitMQManager.Implementations.RabbitMQ.RPC.Strategies;
 
-namespace MQGateway.Strategies
+namespace MQGateway.Strategies;
+
+[Command("GetAllTopics")]
+internal class GetAllTopics : MQStrategy<GetAllTopicsRequest, GetAllTopicsResponse>
 {
-	[Command("GetAllTopics")]
-	internal class GetAllTopics : MQStrategy<GetAllTopicsRequest, GetAllTopicsResponse>
+	private readonly IServiceScopeFactory _scopeFactory;
+
+	public GetAllTopics(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
+
+	protected override async Task<GetAllTopicsResponse> Handle(GetAllTopicsRequest request, CancellationToken cancellationToken = default)
 	{
-		private readonly IServiceScopeFactory _scopeFactory;
+		GetAllTopicsResponse? response = null;
 
-		public GetAllTopics(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
-
-		protected override async Task<GetAllTopicsResponse> Handle(GetAllTopicsRequest request, CancellationToken cancellationToken = default)
+		using (var scope = _scopeFactory.CreateScope())
 		{
-			GetAllTopicsResponse? response = null;
+			var dataRepository = scope.ServiceProvider.GetRequiredService<IDataRepository>();
 
-			using (var scope = _scopeFactory.CreateScope())
+			var topics = await dataRepository.GetTopicsAsync(cancellationToken);
+			List<string> paths = topics
+				.Select(t => t.Path_Topic)
+				.OfType<string>()
+				.ToList();
+
+			response = new GetAllTopicsResponse
 			{
-				var dataRepository = scope.ServiceProvider.GetRequiredService<IDataRepository>();
-
-				var topics = await dataRepository.GetTopicsAsync(cancellationToken);
-				List<string> paths = topics
-					.Select(t => t.Path_Topic)
-					.OfType<string>()
-					.ToList();
-
-				response = new GetAllTopicsResponse
-				{
-					RequestId = request.RequestId!,
-					Type = "GetAllTopics",
-					Success = true,
-					ErrorMessage = string.Empty,
-					Topics = paths,
-				};
-			}
-
-			return response;
+				RequestId = request.RequestId!,
+				Type = "GetAllTopics",
+				Success = true,
+				ErrorMessage = string.Empty,
+				Topics = paths,
+			};
 		}
+
+		return response;
 	}
 }

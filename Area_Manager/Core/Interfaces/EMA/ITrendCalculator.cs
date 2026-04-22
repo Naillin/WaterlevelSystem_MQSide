@@ -1,7 +1,6 @@
-﻿namespace Area_Manager.Core.Interfaces.EMA
+﻿namespace Area_Manager.Core.Interfaces.EMA;
+
+internal interface ITrendCalculator
 {
-	internal interface ITrendCalculator
-	{
-		double CalculateTrend(List<double> values);
-	}
+	double CalculateTrend(List<double> values);
 }

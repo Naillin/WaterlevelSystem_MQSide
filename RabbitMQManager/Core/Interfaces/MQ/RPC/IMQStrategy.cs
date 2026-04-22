@@ -1,9 +1,8 @@
 ﻿using RabbitMQManager.Core.Models;
 
-namespace RabbitMQManager.Core.Interfaces.MQ.RPC
+namespace RabbitMQManager.Core.Interfaces.MQ.RPC;
+
+public interface IMQStrategy
 {
-	public interface IMQStrategy
-	{
-		Task<ResponsePack> Use(string body, CancellationToken cancellationToken = default);
-	}
+	Task<ResponsePack> Use(string body, CancellationToken cancellationToken = default);
 }

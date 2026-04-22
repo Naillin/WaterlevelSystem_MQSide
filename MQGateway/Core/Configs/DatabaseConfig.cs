@@ -1,7 +1,6 @@
-﻿namespace MQGateway.Core.Configs
+﻿namespace MQGateway.Core.Configs;
+
+internal class DatabaseConfig
 {
-	internal class DatabaseConfig
-	{
-		public required string ConnectionString { get; set; }
-	}
+	public required string ConnectionString { get; set; }
 }

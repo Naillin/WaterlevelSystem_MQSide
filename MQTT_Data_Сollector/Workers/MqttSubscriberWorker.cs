@@ -1,115 +1,114 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Contracts.Models.RabbitMQ.RPC.GetAllTopics;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MQTT_Data_Сollector.Core.Interfaces;
-using MQTT_Data_Сollector.Core.Models.GetAllTopics;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
 
-namespace MQTT_Data_Сollector.Workers
+namespace MQTT_Data_Сollector.Workers;
+
+internal class MqttSubscriberWorker : BackgroundService
 {
-	internal class MqttSubscriberWorker : BackgroundService
+	private readonly IMqttClient _mqttClient;
+	private readonly IRPC_Client _rpcClient;
+	private readonly ILogger<MqttSubscriberWorker> _logger;
+
+	private HashSet<string> _currentSubscriptions = new();
+
+	public MqttSubscriberWorker(
+		IMqttClient mqttClient,
+		IRPC_Client rpcClient,
+		ILogger<MqttSubscriberWorker> logger)
 	{
-		private readonly IMqttClient _mqttClient;
-		private readonly IRPC_Client _rpcClient;
-		private readonly ILogger<MqttSubscriberWorker> _logger;
+		_mqttClient = mqttClient;
+		_rpcClient = rpcClient;
+		_logger = logger;
+	}
 
-		private HashSet<string> _currentSubscriptions = new();
-
-		public MqttSubscriberWorker(
-			IMqttClient mqttClient,
-			IRPC_Client rpcClient,
-			ILogger<MqttSubscriberWorker> logger)
+	protected override async Task ExecuteAsync(CancellationToken stoppingToken = default)
+	{
+		try
 		{
-			_mqttClient = mqttClient;
-			_rpcClient = rpcClient;
-			_logger = logger;
-		}
-
-		protected override async Task ExecuteAsync(CancellationToken stoppingToken = default)
-		{
-			try
+			while (!stoppingToken.IsCancellationRequested)
 			{
-				while (!stoppingToken.IsCancellationRequested)
-				{
-					await RefreshSubscriptions(stoppingToken);
-					//await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-					await Task.Delay(30000, stoppingToken);
-				}
-			}
-			catch (OperationCanceledException)
-			{
-				_logger.LogInformation("Worker operation cancelled");
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Error in MQTT subscriber worker");
-			}
-			finally
-			{
-				await _mqttClient.UnsubscribeAllAsync();
-				await _mqttClient.DisconnectAsync();
-				_mqttClient.Dispose();
-				_rpcClient.Dispose();
+				await RefreshSubscriptions(stoppingToken);
+				//await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				await Task.Delay(30000, stoppingToken);
 			}
 		}
-
-		private async Task RefreshSubscriptions(CancellationToken cancellationToken)
+		catch (OperationCanceledException)
 		{
-			try
+			_logger.LogInformation("Worker operation cancelled");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error in MQTT subscriber worker");
+		}
+		finally
+		{
+			await _mqttClient.UnsubscribeAllAsync();
+			await _mqttClient.DisconnectAsync();
+			_mqttClient.Dispose();
+			_rpcClient.Dispose();
+		}
+	}
+
+	private async Task RefreshSubscriptions(CancellationToken cancellationToken)
+	{
+		try
+		{
+			_logger.LogInformation("Refreshing topic subscriptions");
+
+			var response = await _rpcClient.SendRequestAsync<GetAllTopicsRequest, GetAllTopicsResponse>(
+				new GetAllTopicsRequest(),
+				"GetAllTopics",
+				TimeSpan.FromSeconds(30),
+				cancellationToken
+			);
+			// todo: убрать хардкод!!!!!!!!!!!!!!!!!!!
+
+			if (!response.Success)
 			{
-				_logger.LogInformation("Refreshing topic subscriptions");
-
-				var response = await _rpcClient.SendRequestAsync<GetAllTopicsRequest, GetAllTopicsResponse>(
-					new GetAllTopicsRequest(),
-					"GetAllTopics",
-					TimeSpan.FromSeconds(30),
-					cancellationToken
-				);
-				// todo: убрать хардкод!!!!!!!!!!!!!!!!!!!
-
-				if (!response.Success)
-				{
-					_logger.LogError($"Failed to get topics: {response.ErrorMessage}");
-					return;
-				}
-
-				if (response.Topics == null || response.Topics.Count == 0)
-				{
-					_logger.LogWarning("Received empty topics list");
-					return;
-				}
-
-				await UpdateSubscriptions(response.Topics);
+				_logger.LogError($"Failed to get topics: {response.ErrorMessage}");
+				return;
 			}
-			catch (TimeoutException ex)
+
+			if (response.Topics == null || response.Topics.Count == 0)
 			{
-				_logger.LogWarning(ex.Message);
+				_logger.LogWarning("Received empty topics list");
+				return;
 			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Error refreshing subscriptions");
-			}
+
+			await UpdateSubscriptions(response.Topics);
+		}
+		catch (TimeoutException ex)
+		{
+			_logger.LogWarning(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error refreshing subscriptions");
+		}
+	}
+
+	private async Task UpdateSubscriptions(List<string> newTopics)
+	{
+		var newTopicsSet = new HashSet<string>(newTopics);
+		var topicsToSubscribe = newTopicsSet.Except(_currentSubscriptions).ToList();
+		var topicsToUnsubscribe = _currentSubscriptions.Except(newTopicsSet).ToList();
+
+		if (topicsToSubscribe.Any())
+		{
+			await _mqttClient.SubscribeAsync(topicsToSubscribe.ToArray());
+			_logger.LogInformation($"Subscribed to {topicsToSubscribe.Count} new topics");
 		}
 
-		private async Task UpdateSubscriptions(List<string> newTopics)
+		if (topicsToUnsubscribe.Any())
 		{
-			var newTopicsSet = new HashSet<string>(newTopics);
-			var topicsToSubscribe = newTopicsSet.Except(_currentSubscriptions).ToList();
-			var topicsToUnsubscribe = _currentSubscriptions.Except(newTopicsSet).ToList();
-
-			if (topicsToSubscribe.Any())
-			{
-				await _mqttClient.SubscribeAsync(topicsToSubscribe.ToArray());
-				_logger.LogInformation($"Subscribed to {topicsToSubscribe.Count} new topics");
-			}
-
-			if (topicsToUnsubscribe.Any())
-			{
-				await _mqttClient.UnsubscribeAsync(topicsToUnsubscribe.ToArray());
-				_logger.LogInformation($"Unsubscribed from {topicsToUnsubscribe.Count} old topics");
-			}
-
-			_currentSubscriptions = newTopicsSet;
-			_logger.LogInformation($"Total subscriptions: {_currentSubscriptions.Count}");
+			await _mqttClient.UnsubscribeAsync(topicsToUnsubscribe.ToArray());
+			_logger.LogInformation($"Unsubscribed from {topicsToUnsubscribe.Count} old topics");
 		}
+
+		_currentSubscriptions = newTopicsSet;
+		_logger.LogInformation($"Total subscriptions: {_currentSubscriptions.Count}");
 	}
 }

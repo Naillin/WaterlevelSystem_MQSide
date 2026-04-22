@@ -3,86 +3,85 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MQGateway.Core.Entities;
 using MQGateway.Core.Interfaces;
-using MQGateway.Core.Models;
 using RabbitMQManager.Core.Interfaces.MQ;
 using System.Text.Json;
+using Contracts.Models.RabbitMQ;
 using RabbitMQManager.Implementations;
 
-namespace MQGateway.Workers
+namespace MQGateway.Workers;
+
+internal class CollectorWorker : IHostedService
 {
-	internal class CollectorWorker : IHostedService
+	private readonly ILogger<CollectorWorker> _logger;
+	private readonly IMessageConsumer _messageConsumer;
+	private readonly IServiceScopeFactory _scopeFactory;
+	private readonly string _queue;
+	private string _tag = string.Empty;
+
+	public CollectorWorker(
+		ILogger<CollectorWorker> logger,
+		IMessageConsumer messageConsumer,
+		IServiceScopeFactory scopeFactory,
+		string queue)
 	{
-		private readonly ILogger<CollectorWorker> _logger;
-		private readonly IMessageConsumer _messageConsumer;
-		private readonly IServiceScopeFactory _scopeFactory;
-		private readonly string _queue;
-		private string _tag = string.Empty;
+		_messageConsumer = messageConsumer;
+		_scopeFactory = scopeFactory;
+		_queue = queue;
 
-		public CollectorWorker(
-			ILogger<CollectorWorker> logger,
-			IMessageConsumer messageConsumer,
-			IServiceScopeFactory scopeFactory,
-			string queue)
+		_logger = logger;
+	}
+
+	public async Task StartAsync(CancellationToken cancellationToken = default)
+	{
+		_logger.LogInformation("Starting collector worker");
+
+		_tag = await _messageConsumer.StartConsumingAsync(
+			_queue,
+			RunAsync,
+			cancellationToken
+		);
+	}
+
+	public async Task StopAsync(CancellationToken cancellationToken = default)
+	{
+		_logger.LogInformation("Stopping collector worker");
+
+		await _messageConsumer.StopConsumingAsync(_tag, cancellationToken);
+		_tag = string.Empty;
+	}
+
+	private async Task RunAsync(MessageContext context, CancellationToken cancellationToken = default)
+	{
+		try
 		{
-			_messageConsumer = messageConsumer;
-			_scopeFactory = scopeFactory;
-			_queue = queue;
+			var dataReceivedEvent = JsonSerializer.Deserialize<SensorDataReceivedEvent>(context.Body);
 
-			_logger = logger;
-		}
+			if (dataReceivedEvent == null)
+				throw new InvalidOperationException($"Failed to deserialize request.");
 
-		public async Task StartAsync(CancellationToken cancellationToken = default)
-		{
-			_logger.LogInformation("Starting collector worker");
-
-			_tag = await _messageConsumer.StartConsumingAsync(
-				_queue,
-				RunAsync,
-				cancellationToken
-			);
-		}
-
-		public async Task StopAsync(CancellationToken cancellationToken = default)
-		{
-			_logger.LogInformation("Stopping collector worker");
-
-			await _messageConsumer.StopConsumingAsync(_tag, cancellationToken);
-			_tag = string.Empty;
-		}
-
-		private async Task RunAsync(MessageContext context, CancellationToken cancellationToken = default)
-		{
-			try
+			using (var scope = _scopeFactory.CreateScope())
 			{
-				var dataReceivedEvent = JsonSerializer.Deserialize<SensorDataReceivedEvent>(context.Body);
+				var dataRepository = scope.ServiceProvider.GetRequiredService<IDataRepository>();
 
-				if (dataReceivedEvent == null)
-					throw new InvalidOperationException($"Failed to deserialize request.");
+				var topic = await dataRepository.GetTopicAsync(dataReceivedEvent.TopicPath!);
 
-				using (var scope = _scopeFactory.CreateScope())
+				if (topic == null)
+					throw new InvalidOperationException($"Failed to get topic.");
+
+				var data = new Data
 				{
-					var dataRepository = scope.ServiceProvider.GetRequiredService<IDataRepository>();
+					ID_Topic = topic.ID_Topic,
+					Value_Data = dataReceivedEvent.Value.ToString(),
+					Time_Data = dataReceivedEvent.Date
+				};
 
-					var topic = await dataRepository.GetTopicAsync(dataReceivedEvent.TopicPath!);
-
-					if (topic == null)
-						throw new InvalidOperationException($"Failed to get topic.");
-
-					var data = new Data
-					{
-						ID_Topic = topic.ID_Topic,
-						Value_Data = dataReceivedEvent.Value.ToString(),
-						Time_Data = dataReceivedEvent.Date
-					};
-
-					await dataRepository.AddDataAsync(data, cancellationToken);
-					_logger.LogInformation($"Data saved for topic: {dataReceivedEvent.TopicPath}");
-				}
+				await dataRepository.AddDataAsync(data, cancellationToken);
+				_logger.LogInformation($"Data saved for topic: {dataReceivedEvent.TopicPath}");
 			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Error in collector worker");
-			}
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error in collector worker");
 		}
 	}
 }

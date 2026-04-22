@@ -1,26 +1,25 @@
-﻿using MQTT_Data_Сollector.Core.Models;
+﻿using Contracts.Models;
 using RabbitMQManager.Core.Interfaces;
 
-namespace MQTT_Data_Сollector.Core.Interfaces
+namespace MQTT_Data_Сollector.Core.Interfaces;
+
+internal interface IMqttClient : IConnector, IDisposable
 {
-	internal interface IMqttClient : IConnector, IDisposable
-	{
-		bool IsConnected();
+	bool IsConnected();
 
-		Task SubscribeAsync(string topic, CancellationToken cancellationToken = default);
+	Task SubscribeAsync(string topic, CancellationToken cancellationToken = default);
 
-		Task SubscribeAsync(string[] topics, CancellationToken cancellationToken = default);
+	Task SubscribeAsync(string[] topics, CancellationToken cancellationToken = default);
 
-		Task UnsubscribeAsync(string topic, CancellationToken cancellationToken = default);
+	Task UnsubscribeAsync(string topic, CancellationToken cancellationToken = default);
 
-		Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default);
+	Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default);
 
-		Task UnsubscribeAllAsync(CancellationToken cancellationToken = default);
+	Task UnsubscribeAllAsync(CancellationToken cancellationToken = default);
 
-		IReadOnlyCollection<string> GetSubscriptions();
+	IReadOnlyCollection<string> GetSubscriptions();
 
-		Task Publish(string topic, string payload, CancellationToken cancellationToken = default);
+	Task Publish(string topic, string payload, CancellationToken cancellationToken = default);
 
-		event EventHandler<MqttMessageReceivedEventArgs> MessageReceived;
-	}
+	event EventHandler<MqttMessageReceivedEventArgs> MessageReceived;
 }

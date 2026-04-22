@@ -1,36 +1,35 @@
 ﻿using System.Globalization;
+using Contracts.Models.RabbitMQ;
 using Microsoft.Extensions.Logging;
 using MQTT_Data_Сollector.Core.Interfaces;
-using MQTT_Data_Сollector.Core.Models;
 using RabbitMQManager.Core.Interfaces.MQ;
 
-namespace MQTT_Data_Сollector.Services
+namespace MQTT_Data_Сollector.Services;
+
+internal class RabbitMQService : IMQService
 {
-	internal class RabbitMQService : IMQService
+	private readonly IMessageProducer _messageProducer;
+	private readonly ILogger<RabbitMQService> _logger;
+
+	public RabbitMQService(IMessageProducer messageProducer, ILogger<RabbitMQService> logger)
 	{
-		private readonly IMessageProducer _messageProducer;
-		private readonly ILogger<RabbitMQService> _logger;
+		_messageProducer = messageProducer;
+		_logger = logger;
+	}
 
-		public RabbitMQService(IMessageProducer messageProducer, ILogger<RabbitMQService> logger)
+	public async Task PublishDataAsync(string topic, string value)
+	{
+		_logger.LogInformation($"Publish data in queue.");
+		var date = DateTimeOffset.UtcNow;
+
+		var message = new SensorDataReceivedEvent
 		{
-			_messageProducer = messageProducer;
-			_logger = logger;
-		}
+			TopicPath = topic,
+			Value = double.Parse(value, CultureInfo.InvariantCulture),
+			Date = date
+		};
+		await _messageProducer.PublishAsync<SensorDataReceivedEvent>(message);
 
-		public async Task PublishDataAsync(string topic, string value)
-		{
-			_logger.LogInformation($"Publish data in queue.");
-			var date = DateTimeOffset.UtcNow;
-
-			var message = new SensorDataReceivedEvent
-			{
-				TopicPath = topic,
-				Value = double.Parse(value, CultureInfo.InvariantCulture),
-				Date = date
-			};
-			await _messageProducer.PublishAsync<SensorDataReceivedEvent>(message);
-
-			_logger.LogInformation($"Publish value {value} at {date.ToString()} time.");
-		}
+		_logger.LogInformation($"Publish value {value} at {date.ToString()} time.");
 	}
 }

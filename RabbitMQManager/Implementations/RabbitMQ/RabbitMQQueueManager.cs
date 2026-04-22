@@ -3,136 +3,135 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using RabbitMQManager.Core.Interfaces.MQ;
 
-namespace RabbitMQManager.Implementations.RabbitMQ
+namespace RabbitMQManager.Implementations.RabbitMQ;
+
+public class RabbitMQQueueManager : MQConnector, IMessageQueueManager
 {
-	public class RabbitMQQueueManager : MQConnector, IMessageQueueManager
+	private readonly ILogger<RabbitMQQueueManager> _consumerLogger;
+
+	public RabbitMQQueueManager(ILogger<RabbitMQQueueManager> logger, MQConnectionContext connectionContext) : base(logger, connectionContext) => _consumerLogger = logger;
+
+	public override async Task ConnectAsync(CancellationToken cancellationToken = default)
 	{
-		private readonly ILogger<RabbitMQQueueManager> _consumerLogger;
+		await base.ConnectAsync(cancellationToken);
 
-		public RabbitMQQueueManager(ILogger<RabbitMQQueueManager> logger, MQConnectionContext connectionContext) : base(logger, connectionContext) => _consumerLogger = logger;
+		if (_channel == null || _channel.IsClosed)
+			_channel = await _connection!.CreateChannelAsync(null, cancellationToken);
 
-		public override async Task ConnectAsync(CancellationToken cancellationToken = default)
+		_consumerLogger.LogInformation($"Channel for RabbitMQ attached. {_channel.ToString()}");
+	}
+
+	public async Task<QueueDeclareOk> CreateQueueAsync(string queueName, bool durable = true, bool exclusive = false, bool autoDelete = false, bool noWait = false, CancellationToken cancellationToken = default)
+	{
+		try
 		{
-			await base.ConnectAsync(cancellationToken);
-
-			if (_channel == null || _channel.IsClosed)
-				_channel = await _connection!.CreateChannelAsync(null, cancellationToken);
-
-			_consumerLogger.LogInformation($"Channel for RabbitMQ attached. {_channel.ToString()}");
+			return await _channel!.QueueDeclareAsync(
+				queue: queueName,
+				durable: durable,
+				exclusive: exclusive,
+				autoDelete: autoDelete,
+				arguments: null,
+				noWait: noWait,
+				cancellationToken
+			);
 		}
-
-		public async Task<QueueDeclareOk> CreateQueueAsync(string queueName, bool durable = true, bool exclusive = false, bool autoDelete = false, bool noWait = false, CancellationToken cancellationToken = default)
+		catch (BrokerUnreachableException ex)
 		{
-			try
-			{
-				return await _channel!.QueueDeclareAsync(
-					queue: queueName,
-					durable: durable,
-					exclusive: exclusive,
-					autoDelete: autoDelete,
-					arguments: null,
-					noWait: noWait,
-					cancellationToken
-				);
-			}
-			catch (BrokerUnreachableException ex)
-			{
-				_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
-				throw;
-			}
+			_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
+			throw;
 		}
+	}
 
-		public async Task<QueueDeclareOk> AnonymousQueueDeclareAsync(CancellationToken cancellationToken = default)
+	public async Task<QueueDeclareOk> AnonymousQueueDeclareAsync(CancellationToken cancellationToken = default)
+	{
+		try
 		{
-			try
-			{
-				return await _channel!.QueueDeclareAsync(
-					queue: string.Empty,
-					durable: false,
-					exclusive: false,
-					autoDelete: true,
-					arguments: null,
-					noWait: false,
-					cancellationToken
-				);
-			}
-			catch (BrokerUnreachableException ex)
-			{
-				_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
-				throw;
-			}
+			return await _channel!.QueueDeclareAsync(
+				queue: string.Empty,
+				durable: false,
+				exclusive: false,
+				autoDelete: true,
+				arguments: null,
+				noWait: false,
+				cancellationToken
+			);
 		}
-
-		public async Task CreateExchangeAsync(string exchangeName, string exchangeType = "direct", bool durable = true, bool autoDelete = false, bool noWait = false, CancellationToken cancellationToken = default)
+		catch (BrokerUnreachableException ex)
 		{
-			try
-			{
-				await _channel!.ExchangeDeclareAsync(
-					exchange: exchangeName,
-					type: exchangeType,
-					durable: durable,
-					autoDelete: autoDelete,
-					arguments: null,
-					noWait: noWait,
-					cancellationToken
-				);
-			}
-			catch (BrokerUnreachableException ex)
-			{
-				_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
-				throw;
-			}
+			_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
+			throw;
 		}
+	}
 
-		public async Task BindQueueAsync(string queueName, string exchangeName, string routingKey = "", CancellationToken cancellationToken = default)
+	public async Task CreateExchangeAsync(string exchangeName, string exchangeType = "direct", bool durable = true, bool autoDelete = false, bool noWait = false, CancellationToken cancellationToken = default)
+	{
+		try
 		{
-			try
-			{
-				await _channel!.QueueBindAsync(
-					queue: queueName,
-					exchange: exchangeName,
-					routingKey: routingKey,
-					arguments: null
-				);
-			}
-			catch (BrokerUnreachableException ex)
-			{
-				_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
-				throw;
-			}
+			await _channel!.ExchangeDeclareAsync(
+				exchange: exchangeName,
+				type: exchangeType,
+				durable: durable,
+				autoDelete: autoDelete,
+				arguments: null,
+				noWait: noWait,
+				cancellationToken
+			);
 		}
-
-		public async Task DeleteQueue(string queueName)
+		catch (BrokerUnreachableException ex)
 		{
-			try
-			{
-				await _channel!.QueueDeleteAsync(
-					queue: queueName,
-					ifUnused: false,
-					ifEmpty: false
-				);
-			}
-			catch (BrokerUnreachableException ex)
-			{
-				_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
-				throw;
-			}
+			_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
+			throw;
 		}
+	}
 
-		public async Task DeleteExchange(string exchangeName)
+	public async Task BindQueueAsync(string queueName, string exchangeName, string routingKey = "", CancellationToken cancellationToken = default)
+	{
+		try
 		{
-			try
-			{
-				await _channel!.ExchangeDeleteAsync(
-					exchange: exchangeName,
-					ifUnused: false
-				);
-			}
-			catch (BrokerUnreachableException ex)
-			{
-				_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
-				throw;
-			}
+			await _channel!.QueueBindAsync(
+				queue: queueName,
+				exchange: exchangeName,
+				routingKey: routingKey,
+				arguments: null
+			);
+		}
+		catch (BrokerUnreachableException ex)
+		{
+			_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
+			throw;
+		}
+	}
+
+	public async Task DeleteQueue(string queueName)
+	{
+		try
+		{
+			await _channel!.QueueDeleteAsync(
+				queue: queueName,
+				ifUnused: false,
+				ifEmpty: false
+			);
+		}
+		catch (BrokerUnreachableException ex)
+		{
+			_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
+			throw;
+		}
+	}
+
+	public async Task DeleteExchange(string exchangeName)
+	{
+		try
+		{
+			await _channel!.ExchangeDeleteAsync(
+				exchange: exchangeName,
+				ifUnused: false
+			);
+		}
+		catch (BrokerUnreachableException ex)
+		{
+			_consumerLogger.LogError(ex, "Cannot reach RabbitMQ broker.");
+			throw;
 		}
 	}
 }

@@ -1,9 +1,8 @@
-﻿using Area_Manager.Core.Models;
+﻿using Contracts.Models;
 
-namespace Area_Manager.Core.Interfaces.EMA
+namespace Area_Manager.Core.Interfaces.EMA;
+
+internal interface IPredictor
 {
-	internal interface IPredictor
-	{
-		public IList<ValueAtTime> Predict(IList<ValueAtTime> values, int predictionSteps = 3);
-	}
+	public IList<ValueAtTime> Predict(IList<ValueAtTime> values, int predictionSteps = 3);
 }

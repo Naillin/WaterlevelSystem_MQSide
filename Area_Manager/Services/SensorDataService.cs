@@ -1,170 +1,169 @@
-﻿using Area_Manager.Core;
-using Area_Manager.Core.Interfaces;
-using Area_Manager.Core.Models;
-using Area_Manager.Core.Models.GetTopicInfo;
+﻿using Area_Manager.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
 using System.Collections.Concurrent;
+using Contracts.Models;
+using Contracts.Models.RabbitMQ;
+using Contracts.Models.RabbitMQ.RPC.GetTopicInfo;
 
-namespace Area_Manager.Services
+namespace Area_Manager.Services;
+
+internal class SensorDataService : ISensorDataService
 {
-	internal class SensorDataService : ISensorDataService
+	private readonly ILogger<SensorDataService> _logger;
+	private readonly IRPC_Client _rpcClient;
+
+	private readonly ConcurrentDictionary<string, Lazy<Task<SensorDataDto>>> _sensorDataTasks = new();
+	private readonly ConcurrentDictionary<string, List<(double Value, DateTimeOffset Date)>> _pendingData = new();
+
+	public SensorDataService(IRPC_Client rpcClient, ILogger<SensorDataService> logger)
 	{
-		private readonly ILogger<SensorDataService> _logger;
-		private readonly IRPC_Client _rpcClient;
+		_rpcClient = rpcClient;
 
-		private readonly ConcurrentDictionary<string, Lazy<Task<SensorDataDto>>> _sensorDataTasks = new();
-		private readonly ConcurrentDictionary<string, List<(double Value, DateTimeOffset Date)>> _pendingData = new();
-
-		public SensorDataService(IRPC_Client rpcClient, ILogger<SensorDataService> logger)
-		{
-			_rpcClient = rpcClient;
-
-			_logger = logger;
+		_logger = logger;
 			
-			// todo: При запуске один раз вытянуть данные по топикам из кеша\database. Нужен кеш в который это попадет.
+		// todo: При запуске один раз вытянуть данные по топикам из кеша\database. Нужен кеш в который это попадет.
+	}
+
+	public IReadOnlyDictionary<string, SensorDataDto> GetSensorData()
+	{
+		// Возвращаем только завершенные сенсоры
+		var result = new Dictionary<string, SensorDataDto>();
+
+		foreach (var kvp in _sensorDataTasks)
+		{
+			if (kvp.Value.IsValueCreated && kvp.Value.Value.IsCompletedSuccessfully)
+			{
+				result[kvp.Key] = kvp.Value.Value.Result;
+			}
+			// todo: Можно также добавить логику для сенсоров, которые еще в процессе создания
 		}
 
-		public IReadOnlyDictionary<string, SensorDataDto> GetSensorData()
+		return result;
+	}
+
+	public Task AddData(SensorDataReceivedEvent sensorEvent, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace(sensorEvent.TopicPath))
+			return Task.CompletedTask;
+
+		var topicPath = sensorEvent.TopicPath!;
+
+		// БЫСТРЫЙ ПУТЬ: сенсор уже полностью создан
+		if (IsSensorFullyCreated(topicPath))
 		{
-			// Возвращаем только завершенные сенсоры
-			var result = new Dictionary<string, SensorDataDto>();
-
-			foreach (var kvp in _sensorDataTasks)
-			{
-				if (kvp.Value.IsValueCreated && kvp.Value.Value.IsCompletedSuccessfully)
-				{
-					result[kvp.Key] = kvp.Value.Value.Result;
-				}
-				// todo: Можно также добавить логику для сенсоров, которые еще в процессе создания
-			}
-
-			return result;
-		}
-
-		public Task AddData(SensorDataReceivedEvent sensorEvent, CancellationToken cancellationToken = default)
-		{
-			if (string.IsNullOrWhiteSpace(sensorEvent.TopicPath))
-				return Task.CompletedTask;
-
-			var topicPath = sensorEvent.TopicPath!;
-
-			// БЫСТРЫЙ ПУТЬ: сенсор уже полностью создан
-			if (IsSensorFullyCreated(topicPath))
-			{
-				_logger.LogInformation($"Adding data to {topicPath}.");
-				AddDataToExistingSensor(topicPath, sensorEvent.Value, sensorEvent.Date);
-				return Task.CompletedTask;
-			}
-
-			// МЕДЛЕННЫЙ ПУТЬ: сенсор еще не готов
-			_logger.LogInformation($"Unregistered sensor in the system - {topicPath}. Adding data to temporary storage.");
-			_pendingData.AddOrUpdate(topicPath,
-				new List<(double, DateTimeOffset)> { (sensorEvent.Value, sensorEvent.Date) },
-				(key, existing) =>
-				{
-					existing.Add((sensorEvent.Value, sensorEvent.Date));
-					return existing;
-				});
-
-			// Запускаем фоновую инициализацию fire-and-forget
-			_logger.LogInformation($"Attempting to register - {topicPath}.");
-			_ = Task.Run(() => TryEnsureSensorInitializedAsync(topicPath, cancellationToken));
-
+			_logger.LogInformation($"Adding data to {topicPath}.");
+			AddDataToExistingSensor(topicPath, sensorEvent.Value, sensorEvent.Date);
 			return Task.CompletedTask;
 		}
 
-		private bool IsSensorFullyCreated(string topicPath) =>
-			_sensorDataTasks.TryGetValue(topicPath, out var lazyTask) &&
-			lazyTask.IsValueCreated &&
-			lazyTask.Value.IsCompletedSuccessfully;
-
-		private void AddDataToExistingSensor(string topicPath, double value, DateTimeOffset Date)
-		{
-			if (_sensorDataTasks.TryGetValue(topicPath, out var lazyTask) &&
-				lazyTask.IsValueCreated &&
-				lazyTask.Value.IsCompletedSuccessfully)
+		// МЕДЛЕННЫЙ ПУТЬ: сенсор еще не готов
+		_logger.LogInformation($"Unregistered sensor in the system - {topicPath}. Adding data to temporary storage.");
+		_pendingData.AddOrUpdate(topicPath,
+			new List<(double, DateTimeOffset)> { (sensorEvent.Value, sensorEvent.Date) },
+			(key, existing) =>
 			{
-				var sensorData = lazyTask.Value.Result;
-				sensorData.Data.Add((value, Date));
-			}
+				existing.Add((sensorEvent.Value, sensorEvent.Date));
+				return existing;
+			});
+
+		// Запускаем фоновую инициализацию fire-and-forget
+		_logger.LogInformation($"Attempting to register - {topicPath}.");
+		_ = Task.Run(() => TryEnsureSensorInitializedAsync(topicPath, cancellationToken));
+
+		return Task.CompletedTask;
+	}
+
+	private bool IsSensorFullyCreated(string topicPath) =>
+		_sensorDataTasks.TryGetValue(topicPath, out var lazyTask) &&
+		lazyTask.IsValueCreated &&
+		lazyTask.Value.IsCompletedSuccessfully;
+
+	private void AddDataToExistingSensor(string topicPath, double value, DateTimeOffset Date)
+	{
+		if (_sensorDataTasks.TryGetValue(topicPath, out var lazyTask) &&
+		    lazyTask.IsValueCreated &&
+		    lazyTask.Value.IsCompletedSuccessfully)
+		{
+			var sensorData = lazyTask.Value.Result;
+			sensorData.Data.Add((value, Date));
 		}
+	}
 
-		private async Task TryEnsureSensorInitializedAsync(string topicPath, CancellationToken cancellationToken = default)
+	private async Task TryEnsureSensorInitializedAsync(string topicPath, CancellationToken cancellationToken = default)
+	{
+		try
 		{
-			try
-			{
-				var lazyTask = _sensorDataTasks.GetOrAdd(topicPath, new Lazy<Task<SensorDataDto>>(() => CreateSensorAsync(topicPath, cancellationToken)));
+			var lazyTask = _sensorDataTasks.GetOrAdd(topicPath, new Lazy<Task<SensorDataDto>>(() => CreateSensorAsync(topicPath, cancellationToken)));
 
-				// Не ждем - просто обрабатываем исключения
-				await lazyTask.Value;
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, $"Background initialization failed for {topicPath}.");
-			}
+			// Не ждем - просто обрабатываем исключения
+			await lazyTask.Value;
 		}
-
-		// Этот метод выполняется в фоне
-		private async Task<SensorDataDto> CreateSensorAsync(string topicPath, CancellationToken cancellationToken = default)
+		catch (Exception ex)
 		{
-			try
+			_logger.LogError(ex, $"Background initialization failed for {topicPath}.");
+		}
+	}
+
+	// Этот метод выполняется в фоне
+	private async Task<SensorDataDto> CreateSensorAsync(string topicPath, CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			var topicInfoResponse = await _rpcClient.SendRequestAsync<GetTopicInfoRequest, GetTopicInfoResponse>(
+				new GetTopicInfoRequest(topicPath),
+				"GetTopicInfo",
+				TimeSpan.FromSeconds(30),
+				cancellationToken
+			);
+
+			if (!topicInfoResponse.Success)
+				throw new InvalidOperationException($"Registration error for sensor - {topicPath}. Details {topicInfoResponse.ErrorMessage}.");
+
+			if (!topicInfoResponse.Success)
 			{
-				var topicInfoResponse = await _rpcClient.SendRequestAsync<GetTopicInfoRequest, GetTopicInfoResponse>(
-					new GetTopicInfoRequest(topicPath),
-					"GetTopicInfo",
-					TimeSpan.FromSeconds(30),
-					cancellationToken
-				);
-
-				if (!topicInfoResponse.Success)
-					throw new InvalidOperationException($"Registration error for sensor - {topicPath}. Details {topicInfoResponse.ErrorMessage}.");
-
-				if (!topicInfoResponse.Success)
-				{
-					_logger.LogWarning($"Topic {topicPath} is invalid in DB. Stopping attempts.");
+				_logger.LogWarning($"Topic {topicPath} is invalid in DB. Stopping attempts.");
             
-					// Очищаем накопленные данные, чтобы не жрать память
-					_pendingData.TryRemove(topicPath, out _); 
+				// Очищаем накопленные данные, чтобы не жрать память
+				_pendingData.TryRemove(topicPath, out _); 
             
-					// Возвращаем "заглушку". Теперь IsSensorFullyCreated будет true, 
-					// но мы будем знать, что это "битый" топик.
-					return new SensorDataDto { TopicPath = "INVALID_TOPIC" };
-				}
-				
-				var sensorData = new SensorDataDto
-				{
-					TopicPath = topicInfoResponse.TopicPath,
-					Coordinate = new Coordinate(topicInfoResponse.Latitude, topicInfoResponse.Longitude),
-					Altitude = topicInfoResponse.Altitude
-				};
-
-				// Переносим накопленные данные из временного хранилища
-				if (_pendingData.TryRemove(topicPath, out var pendingData))
-					sensorData.Data.AddRange(pendingData);
-
-				return sensorData;
+				// Возвращаем "заглушку". Теперь IsSensorFullyCreated будет true, 
+				// но мы будем знать, что это "битый" топик.
+				return new SensorDataDto { TopicPath = "INVALID_TOPIC" };
 			}
-			catch (Exception ex)
-			{
-				// Логируем ошибку, но не пробрасываем выше, т.к. это фоновая задача
-				_logger.LogError(ex, $"Registration error for sensor - {topicPath}.");
 				
-				// Удаляем себя из словаря, чтобы следующая попытка AddData 
-				// снова вызвала CreateSensorAsync, а не вернула этот упавший Task.
-				_sensorDataTasks.TryRemove(topicPath, out _);
+			var sensorData = new SensorDataDto
+			{
+				TopicPath = topicInfoResponse.TopicPath,
+				Coordinate = new Coordinate(topicInfoResponse.Latitude, topicInfoResponse.Longitude),
+				Altitude = topicInfoResponse.Altitude
+			};
+
+			// Переносим накопленные данные из временного хранилища
+			if (_pendingData.TryRemove(topicPath, out var pendingData))
+				sensorData.Data.AddRange(pendingData);
+
+			return sensorData;
+		}
+		catch (Exception ex)
+		{
+			// Логируем ошибку, но не пробрасываем выше, т.к. это фоновая задача
+			_logger.LogError(ex, $"Registration error for sensor - {topicPath}.");
+				
+			// Удаляем себя из словаря, чтобы следующая попытка AddData 
+			// снова вызвала CreateSensorAsync, а не вернула этот упавший Task.
+			_sensorDataTasks.TryRemove(topicPath, out _);
         
-				throw; // Пробрасываем ошибку дальше в Task
-			}
+			throw; // Пробрасываем ошибку дальше в Task
 		}
+	}
 		
-		public void DeleteSensorsAsync(IList<string> topicKeys)
+	public void DeleteSensorsAsync(IList<string> topicKeys)
+	{
+		foreach (var key in topicKeys)
 		{
-			foreach (var key in topicKeys)
-			{
-				_sensorDataTasks.TryRemove(key, out _);
-				_logger.LogInformation($"Sensor {key} is deleted.");
-			}
+			_sensorDataTasks.TryRemove(key, out _);
+			_logger.LogInformation($"Sensor {key} is deleted.");
 		}
 	}
 }

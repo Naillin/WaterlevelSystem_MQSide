@@ -9,13 +9,13 @@ using MQGateway.DataWork;
 using MQGateway.DataWork.Repositories;
 using MQGateway.Strategies;
 using MQGateway.Workers;
-using MQTT_Data_Сollector.Core.Configs;
 using RabbitMQManager.Core.Attributes;
 using RabbitMQManager.Core.Interfaces.MQ;
 using RabbitMQManager.Core.Interfaces.MQ.RPC;
 using RabbitMQManager.Implementations;
 using RabbitMQManager.Implementations.RabbitMQ.RPC;
 using System.Reflection;
+using MQGateway.Core.Configs;
 using RabbitMQManager.Implementations.RabbitMQ;
 
 namespace MQGateway

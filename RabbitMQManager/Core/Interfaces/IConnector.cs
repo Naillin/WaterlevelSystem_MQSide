@@ -1,11 +1,10 @@
-﻿namespace RabbitMQManager.Core.Interfaces
+﻿namespace RabbitMQManager.Core.Interfaces;
+
+public interface IConnector : IDisposable
 {
-	public interface IConnector : IDisposable
-	{
-		Task ConnectAsync(CancellationToken cancellationToken = default);
+	Task ConnectAsync(CancellationToken cancellationToken = default);
 
-		Task DisconnectAsync(CancellationToken cancellationToken = default);
+	Task DisconnectAsync(CancellationToken cancellationToken = default);
 
-		Task ReconnectAsync(CancellationToken cancellationToken = default);
-	}
+	Task ReconnectAsync(CancellationToken cancellationToken = default);
 }

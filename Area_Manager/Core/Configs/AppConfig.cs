@@ -1,7 +1,6 @@
-﻿namespace Area_Manager.Core.Configs
+﻿namespace Area_Manager.Core.Configs;
+
+internal class AppConfig
 {
-	internal class AppConfig
-	{
-		public required RabbitConfig Rabbit { get; set; }
-	}
+	public required RabbitConfig Rabbit { get; set; }
 }

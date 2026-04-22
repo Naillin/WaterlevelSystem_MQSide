@@ -1,7 +1,6 @@
-﻿namespace Area_Manager.Core.Interfaces
+﻿namespace Area_Manager.Core.Interfaces;
+
+internal interface IMetric
 {
-	internal interface IMetric
-	{
-		double Calculate(IList<double> actualData, IList<double> maData);
-	}
+	double Calculate(IList<double> actualData, IList<double> maData);
 }

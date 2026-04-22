@@ -1,9 +1,9 @@
-﻿using Area_Manager.Core.Models;
+﻿using Contracts.Models;
 
-namespace Area_Manager.Core.Interfaces
+namespace Area_Manager.Core.Interfaces;
+
+internal interface IFloodDataService
 {
-	internal interface IFloodDataService
-	{
-		Task<(IList<Coordinate> coordinates, IList<double> smoothed, IList<ValueAtTime> predictions)> Analysis(SensorDataDto sensorData, CancellationToken cancellationToken = default);
-	}
+	Task<AnalysisPack> Analysis(SensorDataDto sensorData, CancellationToken cancellationToken = default);
 }
+public record AnalysisPack (IList<Coordinate>? Coordinates, IList<double>? Smoothed, IList<ValueAtTime>? Predictions);

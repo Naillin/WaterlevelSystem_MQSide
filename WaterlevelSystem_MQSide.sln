@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Area_Manager", "Area_Manage
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DispatcherAreaManager", "DispatcherAreaManager\DispatcherAreaManager.csproj", "{FB17DAA7-B28D-4E73-9A5C-5BEAF786AA83}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "Contracts\Contracts.csproj", "{1A93D6A3-B54A-44C5-B615-E3C9E6F70089}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{FB17DAA7-B28D-4E73-9A5C-5BEAF786AA83}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB17DAA7-B28D-4E73-9A5C-5BEAF786AA83}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB17DAA7-B28D-4E73-9A5C-5BEAF786AA83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A93D6A3-B54A-44C5-B615-E3C9E6F70089}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A93D6A3-B54A-44C5-B615-E3C9E6F70089}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A93D6A3-B54A-44C5-B615-E3C9E6F70089}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A93D6A3-B54A-44C5-B615-E3C9E6F70089}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

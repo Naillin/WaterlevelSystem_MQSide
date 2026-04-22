@@ -1,7 +1,6 @@
-﻿namespace Area_Manager.Core.Interfaces.EMA
+﻿namespace Area_Manager.Core.Interfaces.EMA;
+
+internal interface IMovingAverage
 {
-	internal interface IMovingAverage
-	{
-		IList<double> Calculate(List<double> values);
-	}
+	IList<double> Calculate(List<double> values);
 }

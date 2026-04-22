@@ -1,4 +1,6 @@
-﻿namespace Area_Manager.Core.Interfaces;
+﻿using Contracts.Models;
+
+namespace Area_Manager.Core.Interfaces;
 
 public interface IGDALPython
 {

@@ -1,7 +1,6 @@
-﻿namespace MQTT_Data_Сollector.Core.Interfaces
+﻿namespace MQTT_Data_Сollector.Core.Interfaces;
+
+internal interface IMQService
 {
-	internal interface IMQService
-	{
-		Task PublishDataAsync(string topic, string value);
-	}
+	Task PublishDataAsync(string topic, string value);
 }

@@ -1,7 +1,6 @@
-﻿namespace RabbitMQManager.Core.Interfaces.MQ.RPC
+﻿namespace RabbitMQManager.Core.Interfaces.MQ.RPC;
+
+public interface ICommandRegistry
 {
-	public interface ICommandRegistry
-	{
-		bool TryGet(string commandName, out IMQStrategy? strategyType);
-	}
+	bool TryGet(string commandName, out IMQStrategy? strategyType);
 }

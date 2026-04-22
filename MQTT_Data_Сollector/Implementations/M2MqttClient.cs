@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MQTT_Data_Сollector.Core.Interfaces;
-using MQTT_Data_Сollector.Core.Models;
 using System.Text;
+using Contracts.Models;
 using uPLibrary.Networking.M2Mqtt.Messages;
 
 namespace MQTT_Data_Сollector.Implementations

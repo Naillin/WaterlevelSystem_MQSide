@@ -1,78 +1,77 @@
-﻿using Area_Manager.Core;
-using Area_Manager.Core.Interfaces;
+﻿using Area_Manager.Core.Interfaces;
+using Contracts.Models;
 using gdal_python = Area_Manager.GDALPython.GDALPython;
 using Microsoft.Extensions.Logging;
 
-namespace Area_Manager.Implementations
+namespace Area_Manager.Implementations;
+
+internal class PythonAreaCalculator : IAreaCalculator
 {
-	internal class PythonAreaCalculator : IAreaCalculator
-	{
-		private readonly ILogger<PythonAreaCalculator> _logger;
-		private readonly IPointsGenerator _pointsGenerator;
+	private readonly ILogger<PythonAreaCalculator> _logger;
+	private readonly IPointsGenerator _pointsGenerator;
 		
-		//private static SemaphoreSlim _semaphore = new SemaphoreSlim(1); //пока 1 операция для тестировки
+	//private static SemaphoreSlim _semaphore = new SemaphoreSlim(1); //пока 1 операция для тестировки
 
-		// todo: хардкод убрать в всех считалках!!!!
-		private double _distance = 200;
-		private double _radius = 10000;
-		private int _countOfSubs = 100;
-		private double _coefHeight = 2.0;
+	// todo: хардкод убрать в всех считалках!!!!
+	private double _distance = 200;
+	private double _radius = 10000;
+	private int _countOfSubs = 100;
+	private double _coefHeight = 2.0;
 
-		private string _pythonPath = "/app/GDALPython/venv/bin/python3";
-		private string _scriptPath = "/app/GDALPython/main.py";
+	private string _pythonPath = "/app/GDALPython/venv/bin/python3";
+	private string _scriptPath = "/app/GDALPython/main.py";
 
-		public PythonAreaCalculator(ILogger<PythonAreaCalculator> logger)
+	public PythonAreaCalculator(ILogger<PythonAreaCalculator> logger)
+	{
+		_pointsGenerator = new CircleGenerator();
+
+		_logger = logger;
+			
+		using (var _gDALPython = new gdal_python(_pythonPath, _scriptPath))
 		{
-			_pointsGenerator = new CircleGenerator();
-
-			_logger = logger;
-			
-			using (var _gDALPython = new gdal_python(_pythonPath, _scriptPath))
-			{
-				if (!_gDALPython.HealthCheck())
-					throw new Exception("GDALPython is cannot started!!!");
-			}
-			
-			_logger.LogInformation("PythonAreaCalculator started");
+			if (!_gDALPython.HealthCheck())
+				throw new Exception("GDALPython is cannot started!!!");
 		}
-
-		public async Task<IList<Coordinate>> FindArea(Coordinate coordinate, double initialHeight = 100, CancellationToken cancellationToken = default)
-		{
-			//_semaphore.Wait();
 			
-			List<Coordinate> result = new List<Coordinate>();
-			HashSet<Coordinate> checkedPoints = new HashSet<Coordinate>();
+		_logger.LogInformation("PythonAreaCalculator started");
+	}
 
-			double stepForHeight = (initialHeight / _coefHeight) / (double)_countOfSubs;
-			double stepForRadius = _radius / (double)_countOfSubs;
+	public async Task<IList<Coordinate>> FindArea(Coordinate coordinate, double initialHeight = 100, CancellationToken cancellationToken = default)
+	{
+		//_semaphore.Wait();
+			
+		List<Coordinate> result = new List<Coordinate>();
+		HashSet<Coordinate> checkedPoints = new HashSet<Coordinate>();
 
-			using (var _gDALPython = new gdal_python(_pythonPath, _scriptPath))
+		double stepForHeight = (initialHeight / _coefHeight) / (double)_countOfSubs;
+		double stepForRadius = _radius / (double)_countOfSubs;
+
+		using (var _gDALPython = new gdal_python(_pythonPath, _scriptPath))
+		{
+			for (double currentRadius = stepForRadius; currentRadius <= 10000; currentRadius = currentRadius + stepForRadius)
 			{
-				for (double currentRadius = stepForRadius; currentRadius <= 10000; currentRadius = currentRadius + stepForRadius)
+				List<Coordinate> circleCoordinates = _pointsGenerator.Prepare(coordinate, currentRadius, _distance).Generate();
+				foreach (Coordinate item in circleCoordinates)
 				{
-					List<Coordinate> circleCoordinates = _pointsGenerator.Prepare(coordinate, currentRadius, _distance).Generate();
-					foreach (Coordinate item in circleCoordinates)
-					{
-						cancellationToken.ThrowIfCancellationRequested();
+					cancellationToken.ThrowIfCancellationRequested();
 						
-						if (checkedPoints.Contains(item))
-							continue;
+					if (checkedPoints.Contains(item))
+						continue;
 						
-						checkedPoints.Add(item);
+					checkedPoints.Add(item);
 
-						double currentElevation = await _gDALPython.GetElevation(item, cancellationToken);
-						//logger.Info($"Высота проверяемой точки: {currentElevation}.");
-						if (currentElevation <= initialHeight)
-							result.Add(item);
+					double currentElevation = await _gDALPython.GetElevation(item, cancellationToken);
+					//logger.Info($"Высота проверяемой точки: {currentElevation}.");
+					if (currentElevation <= initialHeight)
+						result.Add(item);
 						
-					}
-
-					initialHeight = initialHeight - stepForHeight;
 				}
+
+				initialHeight = initialHeight - stepForHeight;
 			}
-			
-			//_semaphore.Release();
-			return result;
 		}
+			
+		//_semaphore.Release();
+		return result;
 	}
 }

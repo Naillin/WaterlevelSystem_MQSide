@@ -1,13 +1,12 @@
-﻿namespace RabbitMQManager.Core.Interfaces.MQ.RPC
+﻿namespace RabbitMQManager.Core.Interfaces.MQ.RPC;
+
+public interface IMQResponse
 {
-	public interface IMQResponse
-	{
-		string? RequestId { get; set; } // Должен совпадать с ID запроса
+	string? RequestId { get; set; } // Должен совпадать с ID запроса
 
-		string? Type { get; set; } // Куда писать
+	string? Type { get; set; } // Куда писать
 
-		bool Success { get; set; }
+	bool Success { get; set; }
 
-		string? ErrorMessage { get; set; }
-	}
+	string? ErrorMessage { get; set; }
 }
