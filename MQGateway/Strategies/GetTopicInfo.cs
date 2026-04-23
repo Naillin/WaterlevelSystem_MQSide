@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMQManager.Core.Attributes;
 using RabbitMQManager.Implementations.RabbitMQ.RPC.Strategies;
-using WaterlevelSystem_DataBaseStructure;
 using IDataRepository = MQGateway.Core.Interfaces.IDataRepository;
 
 namespace MQGateway.Strategies;
@@ -16,39 +15,52 @@ internal class GetTopicInfo : MQStrategy<GetTopicInfoRequest, GetTopicInfoRespon
 
 	protected override async Task<GetTopicInfoResponse> Handle(GetTopicInfoRequest request, CancellationToken cancellationToken = default)
 	{
-		GetTopicInfoResponse? response = null;
-
-		using (var scope = _scopeFactory.CreateScope())
+		try
 		{
-			var dataRepository = scope.ServiceProvider.GetRequiredService<IDataRepository>();
+			GetTopicInfoResponse? response = null;
 
-			if (string.IsNullOrWhiteSpace(request.topicPath))
-				throw new InvalidOperationException($"topicPath is null.");
+			using (var scope = _scopeFactory.CreateScope())
+			{
+				var dataRepository = scope.ServiceProvider.GetRequiredService<IDataRepository>();
 
-			var topic = await dataRepository.GetTopicAsync(request.topicPath, cancellationToken);
+				if (string.IsNullOrWhiteSpace(request.topicPath))
+					throw new InvalidOperationException($"topicPath is null.");
 
-			if (topic == null)
-				response = new GetTopicInfoResponse
-				{
-					RequestId = request.RequestId!,
-					Type = "GetTopicInfo",
-					Success = false,
-					ErrorMessage = $"There is no topic with path {request.topicPath}."
-				};
-			else
-				response = new GetTopicInfoResponse
-				{
-					RequestId = request.RequestId!,
-					Type = "GetTopicInfo",
-					Success = true,
-					ErrorMessage = string.Empty,
-					TopicPath = topic.Path_Topic ?? string.Empty,
-					Latitude = topic.Latitude_Topic,
-					Longitude = topic.Longitude_Topic,
-					Altitude = topic.Altitude_Topic
-				};
+				var topic = await dataRepository.GetTopicAsync(request.topicPath, cancellationToken);
+
+				if (topic == null)
+					response = new GetTopicInfoResponse
+					{
+						RequestId = request.RequestId!,
+						Type = "GetTopicInfo",
+						Success = false,
+						ErrorMessage = $"There is no topic with path {request.topicPath}."
+					};
+				else
+					response = new GetTopicInfoResponse
+					{
+						RequestId = request.RequestId!,
+						Type = "GetTopicInfo",
+						Success = true,
+						ErrorMessage = string.Empty,
+						TopicPath = topic.Path_Topic ?? string.Empty,
+						Latitude = topic.Latitude_Topic,
+						Longitude = topic.Longitude_Topic,
+						Altitude = topic.Altitude_Topic
+					};
+			}
+
+			return response;
 		}
-
-		return response;
+		catch (Exception exception)
+		{
+			return new GetTopicInfoResponse
+			{
+				RequestId = request.RequestId!,
+				Type = "GetTopicInfo",
+				Success = false,
+				ErrorMessage = exception.Message
+			};
+		}
 	}
 }

@@ -43,7 +43,7 @@ internal class FloodDataService : IFloodDataService
 			// EMA - список склееный с временным рядом фактических значений
 			var smoothedAtTime = sensorData.Data
 				.TakeLast(smoothed.Count)
-				.Zip(smoothed, (sensorUnit, smoothValue) => new ValueAtTime(smoothValue, sensorUnit.Date))
+				.Zip(smoothed, (sensorUnit, smoothValue) => sensorUnit with { Value = smoothValue })
 				.ToList();
 				
 			// Список предсказанных значений данные-время

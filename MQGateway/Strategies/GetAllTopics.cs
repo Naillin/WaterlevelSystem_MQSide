@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMQManager.Core.Attributes;
 using RabbitMQManager.Implementations.RabbitMQ.RPC.Strategies;
-using WaterlevelSystem_DataBaseStructure;
 using IDataRepository = MQGateway.Core.Interfaces.IDataRepository;
 
 namespace MQGateway.Strategies;
@@ -16,28 +15,42 @@ internal class GetAllTopics : MQStrategy<GetAllTopicsRequest, GetAllTopicsRespon
 
 	protected override async Task<GetAllTopicsResponse> Handle(GetAllTopicsRequest request, CancellationToken cancellationToken = default)
 	{
-		GetAllTopicsResponse? response = null;
-
-		using (var scope = _scopeFactory.CreateScope())
+		try
 		{
-			var dataRepository = scope.ServiceProvider.GetRequiredService<IDataRepository>();
+			GetAllTopicsResponse? response = null;
 
-			var topics = await dataRepository.GetTopicsAsync(cancellationToken);
-			List<string> paths = topics
-				.Select(t => t.Path_Topic)
-				.OfType<string>()
-				.ToList();
+			using (var scope = _scopeFactory.CreateScope())
+			{
+				var dataRepository = scope.ServiceProvider.GetRequiredService<IDataRepository>();
 
-			response = new GetAllTopicsResponse
+				var topics = await dataRepository.GetTopicsAsync(cancellationToken);
+				List<string> paths = topics
+					.Select(t => t.Path_Topic)
+					.OfType<string>()
+					.ToList();
+
+				response = new GetAllTopicsResponse
+				{
+					RequestId = request.RequestId!,
+					Type = "GetAllTopics",
+					Success = true,
+					ErrorMessage = string.Empty,
+					Topics = paths
+				};
+			}
+
+			return response;
+		}
+		catch(Exception exception)
+		{
+			return new GetAllTopicsResponse
 			{
 				RequestId = request.RequestId!,
 				Type = "GetAllTopics",
-				Success = true,
-				ErrorMessage = string.Empty,
-				Topics = paths,
+				Success = false,
+				ErrorMessage = exception.Message,
+				Topics = null
 			};
 		}
-
-		return response;
 	}
 }
