@@ -1,8 +1,8 @@
-﻿using MQGateway.Core.Entities;
+﻿using WaterlevelSystem_DataBaseStructure.Entities;
 
 namespace MQGateway.Core.Interfaces;
 
-internal interface IDataRepository
+public interface IDataRepository
 {
 	Task<User?> GetUserAsync(string login, CancellationToken cancellationToken = default);
 

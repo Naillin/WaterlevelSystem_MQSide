@@ -1,8 +1,9 @@
 ﻿using Contracts.Models.RabbitMQ.RPC.GetAllTopics;
 using Microsoft.Extensions.DependencyInjection;
-using MQGateway.Core.Interfaces;
 using RabbitMQManager.Core.Attributes;
 using RabbitMQManager.Implementations.RabbitMQ.RPC.Strategies;
+using WaterlevelSystem_DataBaseStructure;
+using IDataRepository = MQGateway.Core.Interfaces.IDataRepository;
 
 namespace MQGateway.Strategies;
 

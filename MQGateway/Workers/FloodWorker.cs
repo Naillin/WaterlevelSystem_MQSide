@@ -1,13 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MQGateway.Core.Interfaces;
 using RabbitMQManager.Core.Interfaces.MQ;
 using System.Text.Json;
 using Contracts.Models;
 using Contracts.Models.RabbitMQ;
-using MQGateway.Core.Entities;
 using RabbitMQManager.Implementations;
+using WaterlevelSystem_DataBaseStructure;
+using WaterlevelSystem_DataBaseStructure.Entities;
+using IDataRepository = MQGateway.Core.Interfaces.IDataRepository;
 
 namespace MQGateway.Workers;
 

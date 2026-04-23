@@ -4,9 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MQGateway.Core.Interfaces;
-using MQGateway.DataWork;
-using MQGateway.DataWork.Repositories;
 using MQGateway.Strategies;
 using MQGateway.Workers;
 using RabbitMQManager.Core.Attributes;
@@ -16,7 +13,10 @@ using RabbitMQManager.Implementations;
 using RabbitMQManager.Implementations.RabbitMQ.RPC;
 using System.Reflection;
 using MQGateway.Core.Configs;
+using MQGateway.Core.Interfaces;
+using MQGateway.Repositories;
 using RabbitMQManager.Implementations.RabbitMQ;
+using WaterlevelSystem_DataBaseStructure;
 
 namespace MQGateway
 {
