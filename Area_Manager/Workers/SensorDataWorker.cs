@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RabbitMQManager.Core.Interfaces.MQ;
 using System.Text.Json;
-using Contracts.Models;
 using Contracts.Models.RabbitMQ;
 using RabbitMQManager.Implementations;
 
@@ -31,6 +30,9 @@ internal class SensorDataWorker : IHostedService
 	{
 		_logger.LogInformation("Starting sensor data worker");
 
+		await _sensorDataService.LoadData(cancellationToken);
+		await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+		
 		_tag = await _messageConsumer.StartConsumingAsync(
 			_queue,
 			HandleResponseMessage,
@@ -83,7 +85,7 @@ internal class SensorDataWorker : IHostedService
 		DateTimeOffset cutoffTime = DateTimeOffset.UtcNow - expirationThreshold;
 
 		var expiredSensors = _sensorDataService.GetSensorData()
-			.Where(kvp => kvp.Value.Data.Any() && kvp.Value.Data.LastOrDefault().Date < cutoffTime)
+			.Where(kvp => kvp.Value.Data.Any() && kvp.Value.Data.LastOrDefault().DateTime < cutoffTime)
 			.Select(kvp => kvp.Key)
 			.ToList();
     

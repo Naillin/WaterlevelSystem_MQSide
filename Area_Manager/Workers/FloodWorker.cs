@@ -76,8 +76,8 @@ internal class FloodWorker : BackgroundService
 		// Кэш, что бы не считать еще раз, если новых данных в Data нет
 		if (_sensorData.TryGetValue(sensor.TopicPath, out var cachedData))
 		{
-			var lastCached = cachedData.Data.LastOrDefault().Date;
-			var lastCurrent = sensor.Data.LastOrDefault().Date;
+			var lastCached = cachedData.Data.LastOrDefault().DateTime;
+			var lastCurrent = sensor.Data.LastOrDefault().DateTime;
 
 			if (lastCached == lastCurrent)
 			{
@@ -126,7 +126,7 @@ internal class FloodWorker : BackgroundService
 		DateTimeOffset cutoffTime = DateTimeOffset.UtcNow - expirationThreshold;
 
 		var expiredSensors = _sensorDataService.GetSensorData()
-			.Where(kvp => kvp.Value.Data.Any() && kvp.Value.Data.LastOrDefault().Date < cutoffTime)
+			.Where(kvp => kvp.Value.Data.Any() && kvp.Value.Data.LastOrDefault().DateTime < cutoffTime)
 			.Select(kvp => kvp.Key)
 			.ToList();
     

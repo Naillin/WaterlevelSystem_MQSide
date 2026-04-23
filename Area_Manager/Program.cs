@@ -108,6 +108,7 @@ internal class Program
 			services.AddSingleton<IMetric, MetricMAE>();
 
 			services.AddSingleton<IFloodDataService, FloodDataService>();
+			services.AddSingleton<ISensorCacheService, SensorCacheService>();
 			services.AddSingleton<ISensorDataService, SensorDataService>();
 
 			services.AddHostedService<FloodWorker>();

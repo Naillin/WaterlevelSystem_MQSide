@@ -12,17 +12,40 @@ internal class SensorDataService : ISensorDataService
 {
 	private readonly ILogger<SensorDataService> _logger;
 	private readonly IRPC_Client _rpcClient;
+	private readonly ISensorCacheService _sensorCacheService;
 
 	private readonly ConcurrentDictionary<string, Lazy<Task<SensorDataDto>>> _sensorDataTasks = new();
-	private readonly ConcurrentDictionary<string, List<(double Value, DateTimeOffset Date)>> _pendingData = new();
+	private readonly ConcurrentDictionary<string, List<ValueAtTime>> _pendingData = new();
 
-	public SensorDataService(IRPC_Client rpcClient, ILogger<SensorDataService> logger)
+	public SensorDataService(IRPC_Client rpcClient, ISensorCacheService sensorCacheService, ILogger<SensorDataService> logger)
 	{
 		_rpcClient = rpcClient;
+		_sensorCacheService = sensorCacheService;
 
 		_logger = logger;
-			
-		// todo: При запуске один раз вытянуть данные по топикам из кеша\database. Нужен кеш в который это попадет.
+	}
+
+	public async Task LoadData(CancellationToken cancellationToken = default)
+	{
+		_sensorDataTasks.Clear();
+
+		var sensorCache = await _sensorCacheService.GetAllSensorsWithData(cancellationToken);
+		if (sensorCache is null)
+			return;
+
+		foreach (var sensor in sensorCache)
+		{
+			// Оборачиваем готовый объект в завершенную задачу
+			var completedTask = Task.FromResult(sensor);
+
+			// Оборачиваем задачу в Lazy, которая сразу же "вычислена"
+			var lazyTask = new Lazy<Task<SensorDataDto>>(() => completedTask);
+
+			// Принудительно обращаемся к Value, чтобы IsValueCreated стало true
+			var _ = lazyTask.Value; 
+
+			_sensorDataTasks.TryAdd(sensor.TopicPath, lazyTask);
+		}
 	}
 
 	public IReadOnlyDictionary<string, SensorDataDto> GetSensorData()
@@ -59,17 +82,7 @@ internal class SensorDataService : ISensorDataService
 
 		// МЕДЛЕННЫЙ ПУТЬ: сенсор еще не готов
 		_logger.LogInformation($"Unregistered sensor in the system - {topicPath}. Adding data to temporary storage.");
-		_pendingData.AddOrUpdate(topicPath,
-			new List<(double, DateTimeOffset)> { (sensorEvent.Value, sensorEvent.Date) },
-			(key, existing) =>
-			{
-				existing.Add((sensorEvent.Value, sensorEvent.Date));
-				return existing;
-			});
-
-		// Запускаем фоновую инициализацию fire-and-forget
-		_logger.LogInformation($"Attempting to register - {topicPath}.");
-		_ = Task.Run(() => TryEnsureSensorInitializedAsync(topicPath, cancellationToken));
+		AddDataToPending(topicPath, sensorEvent.Value, sensorEvent.Date, cancellationToken);
 
 		return Task.CompletedTask;
 	}
@@ -79,14 +92,44 @@ internal class SensorDataService : ISensorDataService
 		lazyTask.IsValueCreated &&
 		lazyTask.Value.IsCompletedSuccessfully;
 
-	private void AddDataToExistingSensor(string topicPath, double value, DateTimeOffset Date)
+	private void AddDataToExistingSensor(string topicPath, double value, DateTimeOffset dateTime)
 	{
 		if (_sensorDataTasks.TryGetValue(topicPath, out var lazyTask) &&
 		    lazyTask.IsValueCreated &&
 		    lazyTask.Value.IsCompletedSuccessfully)
 		{
 			var sensorData = lazyTask.Value.Result;
-			sensorData.Data.Add((value, Date));
+			sensorData.Data.Add(new ValueAtTime(value, dateTime));
+		}
+	}
+	
+	private void AddDataToPending(string topicPath, double value, DateTimeOffset dateTime, CancellationToken cancellationToken = default)
+	{
+		bool isNewTopic = false;
+
+		_pendingData.AddOrUpdate(topicPath,
+			// Если топика еще нет в словаре:
+			(key) => 
+			{
+				isNewTopic = true; // Фиксируем, что мы инициаторы
+				return new List<ValueAtTime> { new ValueAtTime(value, dateTime) };
+			},
+			// Если топик уже есть (инициализация в процессе):
+			(key, list) => 
+			{
+				lock (list) // Защита обычного List от параллельной записи
+				{
+					list.Add(new ValueAtTime(value, dateTime));
+				}
+				return list;
+			});
+
+		// Запускаем инициализацию ТОЛЬКО если мы создали запись первыми
+		if (isNewTopic)
+		{
+			_logger.LogInformation($"Attempting to register - {topicPath}.");
+			// Запускаем фоновую инициализацию fire-and-forget
+			_ = Task.Run(() => TryEnsureSensorInitializedAsync(topicPath, cancellationToken));
 		}
 	}
 
@@ -118,11 +161,8 @@ internal class SensorDataService : ISensorDataService
 			);
 
 			if (!topicInfoResponse.Success)
-				throw new InvalidOperationException($"Registration error for sensor - {topicPath}. Details {topicInfoResponse.ErrorMessage}.");
-
-			if (!topicInfoResponse.Success)
 			{
-				_logger.LogWarning($"Topic {topicPath} is invalid in DB. Stopping attempts.");
+				_logger.LogWarning($"Topic {topicPath} is invalid in DB. Stopping attempts. {topicInfoResponse.ErrorMessage}");
             
 				// Очищаем накопленные данные, чтобы не жрать память
 				_pendingData.TryRemove(topicPath, out _); 
@@ -141,7 +181,8 @@ internal class SensorDataService : ISensorDataService
 
 			// Переносим накопленные данные из временного хранилища
 			if (_pendingData.TryRemove(topicPath, out var pendingData))
-				sensorData.Data.AddRange(pendingData);
+				lock (pendingData) 
+					sensorData.Data.AddRange(pendingData);
 
 			return sensorData;
 		}
