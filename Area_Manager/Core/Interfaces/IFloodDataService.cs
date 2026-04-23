@@ -6,4 +6,4 @@ internal interface IFloodDataService
 {
 	Task<AnalysisPack> Analysis(SensorDataDto sensorData, CancellationToken cancellationToken = default);
 }
-public record AnalysisPack (IList<Coordinate>? Coordinates, IList<double>? Smoothed, IList<ValueAtTime>? Predictions);
+public record AnalysisPack (IList<Coordinate>? Coordinates, IList<ValueAtTime>? Smoothed, IList<ValueAtTime>? Predictions);

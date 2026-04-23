@@ -6,7 +6,7 @@ public class FloodAreaCalculatedEvent
 
 	public string? Coordinates { get; set; }
 	
-	public List<double>? EmaData { get; set; }
+	public List<ValueAtTime>? EmaData { get; set; }
 	
 	public List<ValueAtTime>? PredictionData { get; set; }
 }

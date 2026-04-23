@@ -49,7 +49,7 @@ internal class FloodDataService : IFloodDataService
 			// Список предсказанных значений данные-время
 			var predictions = _predictor.Predict(smoothedAtTime, 3);
 			if (!predictions.Any())
-				return new(null, smoothed, null);
+				return new(null, smoothedAtTime, null);
 				
 			double metric = _metric.Calculate(data, smoothed);
 			double p3baff = predictions.Last().Value + metric;
@@ -64,12 +64,12 @@ internal class FloodDataService : IFloodDataService
 			{
 				_logger.LogInformation($"Conditions met for topic {sensorData.TopicPath}: f1 = {data.Last()} >= buffNumber = {buffedNumber} and p3_buffed = {p3baff} >= altitude = {sensorData.Altitude}.");
 				var coordinates = await _areaCalculator.FindArea(sensorData.Coordinate, predictions.Last().Value, timeoutCts.Token);
-				return new (coordinates, smoothed, predictions);
+				return new (coordinates, smoothedAtTime, predictions);
 			}
 			else
 			{
 				_logger.LogInformation($"Conditions NOT met for topic {sensorData.TopicPath}: f1 = {data.Last()} >= buffNumber = {buffedNumber} and p3_buffed = {p3baff} >= altitude = {sensorData.Altitude}.");
-				return new (null, smoothed, predictions);
+				return new (null, smoothedAtTime, predictions);
 			}
 		}
 		catch (OperationCanceledException)

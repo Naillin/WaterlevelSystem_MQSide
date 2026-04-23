@@ -76,7 +76,7 @@ internal class FloodWorker : IHostedService
 				}
 
 				var emaData = dataReceivedEvent.EmaData?
-					.Select(ema => ConvertToEma(topic.ID_Topic, ema))
+					.Select(point => ConvertToEma(topic.ID_Topic, point))
 					.ToList();
 				var predictions = dataReceivedEvent.PredictionData?
 					.Select(point => ConvertToPrediction(topic.ID_Topic, point))
@@ -99,10 +99,11 @@ internal class FloodWorker : IHostedService
 		}
 	}
 
-	public Ema ConvertToEma(int idTopic, double ema) => new()
+	public Ema ConvertToEma(int idTopic, ValueAtTime point) => new()
 	{
 		ID_Topic = idTopic,
-		Value_Ema = ema.ToString()
+		Value_Ema = point.Value.ToString(),
+		Time_Ema = point.DateTime
 	};
 
 	public Prediction ConvertToPrediction(int idTopic, ValueAtTime point) => new()
