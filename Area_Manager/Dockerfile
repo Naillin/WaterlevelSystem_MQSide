@@ -9,11 +9,17 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Area_Manager/Area_Manager.csproj", "Area_Manager/"]
-COPY ["RabbitMQManager/RabbitMQManager.csproj", "RabbitMQManager/"]
-RUN dotnet restore "./Area_Manager/Area_Manager.csproj"
-COPY . .
-WORKDIR "/src/Area_Manager"
+COPY ["WaterlevelSystem_MQSide/Area_Manager/Area_Manager.csproj", "WaterlevelSystem_MQSide/Area_Manager/"]
+COPY ["WaterlevelSystem_MQSide/RabbitMQManager/RabbitMQManager.csproj", "WaterlevelSystem_MQSide/RabbitMQManager/"]
+COPY ["WaterlevelSystem_MQSide/Contracts/Contracts.csproj", "WaterlevelSystem_MQSide/Contracts/"]
+
+RUN dotnet restore "WaterlevelSystem_MQSide/Area_Manager/Area_Manager.csproj"
+
+COPY WaterlevelSystem_MQSide/Area_Manager/ ./WaterlevelSystem_MQSide/Area_Manager/
+COPY WaterlevelSystem_MQSide/RabbitMQManager/ ./WaterlevelSystem_MQSide/RabbitMQManager/
+COPY WaterlevelSystem_MQSide/Contracts/ ./WaterlevelSystem_MQSide/Contracts/
+
+WORKDIR "/src/WaterlevelSystem_MQSide/Area_Manager"
 RUN dotnet build "./Area_Manager.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # Этот этап используется для публикации проекта службы, который будет скопирован на последний этап
@@ -49,7 +55,7 @@ RUN mkdir -p /data && \
 COPY --from=publish /app/publish .
 
 # Копируем Python-скрипты
-COPY --from=build /src/Area_Manager/GDALPython/ ./GDALPython/
+COPY --from=build /src/WaterlevelSystem_MQSide/Area_Manager/GDALPython/ ./GDALPython/
 
 # Устанавливаем Python-зависимости в виртуальное окружение
 RUN python3 -m venv /app/GDALPython/venv && \

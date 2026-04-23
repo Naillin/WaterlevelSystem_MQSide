@@ -5,16 +5,21 @@ FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
 USER $APP_UID
 WORKDIR /app
 
-
 # Этот этап используется для сборки проекта службы
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["MQTT_Data_Сollector/MQTT_Data_Сollector.csproj", "MQTT_Data_Сollector/"]
-COPY ["RabbitMQManager/RabbitMQManager.csproj", "RabbitMQManager/"]
-RUN dotnet restore "./MQTT_Data_Сollector/MQTT_Data_Сollector.csproj"
-COPY . .
-WORKDIR "/src/MQTT_Data_Сollector"
+COPY ["WaterlevelSystem_MQSide/MQTT_Data_Сollector/MQTT_Data_Сollector.csproj", "WaterlevelSystem_MQSide/MQTT_Data_Сollector/"]
+COPY ["WaterlevelSystem_MQSide/RabbitMQManager/RabbitMQManager.csproj", "WaterlevelSystem_MQSide/RabbitMQManager/"]
+COPY ["WaterlevelSystem_MQSide/Contracts/Contracts.csproj", "WaterlevelSystem_MQSide/Contracts/"]
+
+RUN dotnet restore "WaterlevelSystem_MQSide/MQTT_Data_Сollector/MQTT_Data_Сollector.csproj"
+
+COPY WaterlevelSystem_MQSide/MQTT_Data_Сollector/ ./WaterlevelSystem_MQSide/MQTT_Data_Сollector/
+COPY WaterlevelSystem_MQSide/RabbitMQManager/ ./WaterlevelSystem_MQSide/RabbitMQManager/
+COPY WaterlevelSystem_MQSide/Contracts/ ./WaterlevelSystem_MQSide/Contracts/
+
+WORKDIR "/src/WaterlevelSystem_MQSide/MQTT_Data_Сollector"
 RUN dotnet build "./MQTT_Data_Сollector.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # Этот этап используется для публикации проекта службы, который будет скопирован на последний этап
