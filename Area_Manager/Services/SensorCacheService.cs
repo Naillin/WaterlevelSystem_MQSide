@@ -32,10 +32,20 @@ public class SensorCacheService : ISensorCacheService
             if (!topicDataResponse.Success)
             {
                 _logger.LogWarning($"Load sensor cache failed. Error: {topicDataResponse.ErrorMessage}");
-
                 return null;
             }
+
+            if (topicDataResponse.Topics is null)
+            {
+                _logger.LogWarning($"Load sensor cache failed. Error: Empty Topics");
+                return null;
+            }
+               
             
+            var topicPaths = topicDataResponse.Topics
+                .Select(topic => topic.TopicPath)
+                .ToList();
+            _logger.LogInformation($"Sensor cache is loaded. Topics: {string.Join(", ", topicPaths)}");
             return topicDataResponse.Topics;
         }
         catch(Exception ex)
