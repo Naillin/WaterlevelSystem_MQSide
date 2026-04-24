@@ -20,20 +20,29 @@ public class SensorCacheService : ISensorCacheService
 
     public async Task<IList<SensorDataDto>?> GetAllSensorsWithData(CancellationToken cancellationToken = default)
     {
-        var topicDataResponse = await _rpcClient.SendRequestAsync<GetAllTopicsWithDataRequest, GetAllTopicsWithDataResponse>(
-            new GetAllTopicsWithDataRequest(),
-            "GetAllSensorsWithData",
-            TimeSpan.FromSeconds(30),
-            cancellationToken
-        );
-
-        if (!topicDataResponse.Success)
+        try
         {
-            _logger.LogWarning($"Load sensor cache failed. Error: {topicDataResponse.ErrorMessage}");
+            var topicDataResponse = await _rpcClient.SendRequestAsync<GetAllTopicsWithDataRequest, GetAllTopicsWithDataResponse>(
+                new GetAllTopicsWithDataRequest(),
+                "GetAllTopicsWithData",
+                TimeSpan.FromSeconds(30),
+                cancellationToken
+            );
 
+            if (!topicDataResponse.Success)
+            {
+                _logger.LogWarning($"Load sensor cache failed. Error: {topicDataResponse.ErrorMessage}");
+
+                return null;
+            }
+            
+            return topicDataResponse.Topics;
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError($"Processing sensor cache failed. Error: {ex.Message}");
+            
             return null;
         }
-        
-        return topicDataResponse.Topics;
     }
 }

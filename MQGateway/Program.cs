@@ -104,7 +104,7 @@ namespace MQGateway
 					return new FloodWorker(logger, consumer, scopeFactory, config.Rabbit.FloodQueue);
 				});
 
-				//RPC Strategy
+				//RPC Strategies
 				var strategyTypes = GetStrategies();
 				foreach (var type in strategyTypes)
 				{

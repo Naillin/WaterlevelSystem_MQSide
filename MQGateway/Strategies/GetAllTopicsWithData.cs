@@ -57,7 +57,7 @@ internal class GetAllTopicsWithData : MQStrategy<GetAllTopicsWithDataRequest, Ge
                 Type = "GetAllTopicsWithData",
                 Success = false,
                 ErrorMessage = exception.Message,
-                Topics = null
+                Topics = new List<SensorDataDto>()
             };
         }
     }
