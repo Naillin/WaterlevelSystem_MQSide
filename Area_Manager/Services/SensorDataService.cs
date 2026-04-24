@@ -162,7 +162,7 @@ internal class SensorDataService : ISensorDataService
 
 			if (!topicInfoResponse.Success)
 			{
-				_logger.LogWarning($"Topic {topicPath} is invalid in DB. Stopping attempts. {topicInfoResponse.ErrorMessage}");
+				_logger.LogWarning($"Topic {topicPath} is invalid in DB. Stopping attempts. Error: {topicInfoResponse.ErrorMessage}");
             
 				// Очищаем накопленные данные, чтобы не жрать память
 				_pendingData.TryRemove(topicPath, out _); 

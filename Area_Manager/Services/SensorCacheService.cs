@@ -22,14 +22,14 @@ public class SensorCacheService : ISensorCacheService
     {
         var topicDataResponse = await _rpcClient.SendRequestAsync<GetAllTopicsWithDataRequest, GetAllTopicsWithDataResponse>(
             new GetAllTopicsWithDataRequest(),
-            "GetTopicInfo",
+            "GetAllSensorsWithData",
             TimeSpan.FromSeconds(30),
             cancellationToken
         );
 
         if (!topicDataResponse.Success)
         {
-            _logger.LogWarning($"Load sensor cache failed. {topicDataResponse.ErrorMessage}");
+            _logger.LogWarning($"Load sensor cache failed. Error: {topicDataResponse.ErrorMessage}");
 
             return null;
         }
