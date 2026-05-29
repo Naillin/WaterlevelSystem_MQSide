@@ -6,7 +6,7 @@ internal class ExponentialMovingAverage : IMovingAverage
 {
 	private readonly double _alpha;
 
-	public ExponentialMovingAverage(double smoothing = 2.0, double windowSize = 7.0) => _alpha = smoothing / (windowSize + 1);
+	public ExponentialMovingAverage(double alpha = 0.25) => _alpha = alpha;
 
 	public IList<double> Calculate(List<double> values)
 	{

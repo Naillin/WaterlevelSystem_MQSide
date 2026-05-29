@@ -94,7 +94,7 @@ internal class Program
 			services.AddHostedService<MQConnectorWorker>();
 
 			services.AddSingleton<ITrendCalculator, LinearTrendCalculator>();
-			services.AddSingleton<IMovingAverage>(provider => new ExponentialMovingAverage(2.0, 7.0)); // todo: убрать хардкод
+			services.AddSingleton<IMovingAverage>(provider => new ExponentialMovingAverage(0.50)); // todo: убрать хардкод
 			services.AddSingleton<IPredictor, Predictor>(provider =>
 			{
 				var trendCalculator = provider.GetRequiredService<ITrendCalculator>();
