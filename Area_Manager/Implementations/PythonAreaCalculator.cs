@@ -9,9 +9,7 @@ internal class PythonAreaCalculator : IAreaCalculator
 {
 	private readonly ILogger<PythonAreaCalculator> _logger;
 	private readonly IPointsGenerator _pointsGenerator;
-		
-	//private static SemaphoreSlim _semaphore = new SemaphoreSlim(1); //пока 1 операция для тестировки
-
+	
 	// todo: хардкод убрать в всех считалках!!!!
 	private double _distance = 200;
 	private double _radius = 10000;
@@ -35,11 +33,11 @@ internal class PythonAreaCalculator : IAreaCalculator
 			
 		_logger.LogInformation("PythonAreaCalculator started");
 	}
-
+	
+	// todo: при попадании точки коордиант топика в метод проверяется есть ли для него просчитанная область местности в json или памяти. (координата > список[координата, высота])
+	// если есть, то она загружается и используется для анализа точек координат, если нет то проводится вычисление всех точик и запись в json и память.
 	public async Task<IList<Coordinate>> FindArea(Coordinate coordinate, double initialHeight = 100, CancellationToken cancellationToken = default)
 	{
-		//_semaphore.Wait();
-			
 		List<Coordinate> result = new List<Coordinate>();
 		HashSet<Coordinate> checkedPoints = new HashSet<Coordinate>();
 
@@ -70,8 +68,7 @@ internal class PythonAreaCalculator : IAreaCalculator
 				initialHeight = initialHeight - stepForHeight;
 			}
 		}
-			
-		//_semaphore.Release();
+
 		return result;
 	}
 }

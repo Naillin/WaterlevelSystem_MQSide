@@ -12,7 +12,7 @@ internal class SensorDataService : ISensorDataService
 {
 	private readonly ILogger<SensorDataService> _logger;
 	private readonly IRPC_Client _rpcClient;
-	private readonly ISensorCacheService _sensorCacheService;
+	private readonly ISensorCacheService _sensorCacheService; // todo: вынести получения кеша в дата воркер. Передавать IList<ValueAtTime> в LoadData.
 
 	private readonly ConcurrentDictionary<string, Lazy<Task<SensorDataDto>>> _sensorDataTasks = new();
 	private readonly ConcurrentDictionary<string, List<ValueAtTime>> _pendingData = new();
@@ -25,7 +25,7 @@ internal class SensorDataService : ISensorDataService
 		_logger = logger;
 	}
 
-	public async Task LoadData(CancellationToken cancellationToken = default)
+	public async Task LoadData(CancellationToken cancellationToken = default) // todo: добавить в интерфейсе аргумент IList<ValueAtTime>
 	{
 		_sensorDataTasks.Clear();
 
@@ -44,7 +44,7 @@ internal class SensorDataService : ISensorDataService
 			// Принудительно обращаемся к Value, чтобы IsValueCreated стало true
 			var _ = lazyTask.Value; 
 
-			_sensorDataTasks.TryAdd(sensor.TopicPath, lazyTask);
+			_sensorDataTasks.TryAdd(sensor.TopicPath, lazyTask); // todo: что будет если вызвать LoadData когда топики уже есть?
 		}
 	}
 
